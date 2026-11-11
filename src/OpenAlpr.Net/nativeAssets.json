@@ -1,0 +1,28 @@
+{
+  "windows": {
+    "x64": {
+      "libraryPath": "./win-x64/",
+      "runtimeFrameworkName": "Microsoft.WindowsDesktop.App",
+      "includeNativeLibsOnly": true
+    },
+    "arm64": {
+      "libraryPath": "./win-arm64/"
+    }
+  },
+  "linux": {
+    "x64": {
+      "libraryPath": "./linux-x64/"
+    },
+    "arm64": {
+      "libraryPath": "./linux-arm64/"
+    }
+  },
+  "osx": {
+    "x64": {
+      "libraryPath": "./osx-x64/"
+    },
+    "arm64": {
+      "libraryPath": "./osx-arm64/"
+    }
+  }
+}

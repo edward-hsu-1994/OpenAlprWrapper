@@ -1,0 +1,76 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenAlprWrapper", "src\OpenAlpr.Net\OpenAlprWrapper.csproj", "{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenAlprWrapper.Tests", "tests\OpenAlpr.Net.Tests\OpenAlprWrapper.Tests.csproj", "{F6E6C318-04DD-4482-817A-6D9D8E766F87}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{5D20AA90-6969-D8BD-9DCD-8634F4692FDA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenAlprWrapper.Sample", "samples\OpenAlprWrapper.Sample.csproj", "{CAD33F09-2926-4723-84CB-EA7411C0D1F8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OpenAlpr.Net", "OpenAlpr.Net", "{8E725CC5-5D5C-6D86-2100-81ADCB2149B1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}.Debug|x64.Build.0 = Debug|Any CPU
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}.Debug|x86.Build.0 = Debug|Any CPU
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}.Release|x64.ActiveCfg = Release|Any CPU
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}.Release|x64.Build.0 = Release|Any CPU
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}.Release|x86.ActiveCfg = Release|Any CPU
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0}.Release|x86.Build.0 = Release|Any CPU
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87}.Debug|x64.Build.0 = Debug|Any CPU
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87}.Debug|x86.Build.0 = Debug|Any CPU
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87}.Release|x64.ActiveCfg = Release|Any CPU
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87}.Release|x64.Build.0 = Release|Any CPU
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87}.Release|x86.ActiveCfg = Release|Any CPU
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87}.Release|x86.Build.0 = Release|Any CPU
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8}.Debug|x64.Build.0 = Debug|Any CPU
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8}.Debug|x86.Build.0 = Debug|Any CPU
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8}.Release|x64.ActiveCfg = Release|Any CPU
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8}.Release|x64.Build.0 = Release|Any CPU
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8}.Release|x86.ActiveCfg = Release|Any CPU
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8}.Release|x86.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{1904EF28-0FA7-4BCE-9BAA-2A7609DF16F0} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+		{F6E6C318-04DD-4482-817A-6D9D8E766F87} = {0AB3BF05-4346-4AA6-1389-037BE0695223}
+		{CAD33F09-2926-4723-84CB-EA7411C0D1F8} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
+		{8E725CC5-5D5C-6D86-2100-81ADCB2149B1} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+	EndGlobalSection
+EndGlobal

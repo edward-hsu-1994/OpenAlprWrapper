@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <PackageId>OpenAlprWrapper</PackageId>
+    <Version>0.1.0</Version>
+    <Authors>OpenALPRWrapper contributors</Authors>
+    <Description>.NET wrapper for OpenALPR license plate recognition. Provides P/Invoke bindings to the native OpenALPR C API.</Description>
+    <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/OpenALPRWrapper/OpenALPRWrapper</PackageProjectUrl>
+    <PackageTags>OpenALPR;license-plate-recognition;computer-vision;pinvoke;native</PackageTags>
+    <RepositoryUrl>https://github.com/OpenALPRWrapper/OpenALPRWrapper.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <IncludeNativeAssetsJson>true</IncludeNativeAssetsJson>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Internals visible to test assembly -->
+    <InternalsVisibleTo Include="OpenAlprWrapper.Tests" />
+    
+    <!-- Package includes -->
+    <None Include="../../README.md" Pack="true" PackagePath="\" />
+    <None Include="../../CHANGELOG.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <!-- Native assets support for .NET 8+ (optional, set to true to include) -->
+  <PropertyGroup Condition="'$(IncludeNativeAssetsJson)' == 'true'">
+    <TargetFrameworks>net10.0</TargetFrameworks>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,10 @@
+# Binary files - always treat as text except when in bin/ or obj/ directories
+*.jpg binary=true
+*.jpeg binary=true
+*.png binary=true
+*.bmp binary=true
+*.gif binary=true
+
+# Ignore all generated artifacts in gitignore-listed directories
+samples/bin/** exclude=true
+samples/obj/** exclude=true

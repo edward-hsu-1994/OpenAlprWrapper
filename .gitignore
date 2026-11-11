@@ -1,0 +1,61 @@
+# Build artifacts
+bin/
+obj/
+**.dll
+**.exe
+*.pdb
+**.iwyu.txt
+
+# .NET Core/SDK
+*.sln.doc
+*.userprefs
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.cache
+*.swp
+*.bak
+[Db]*.mdb
+
+# IDE / Editor files
+.idea/
+*.sublime-project
+*.sublime-workspace
+.settings/
+
+# Native build artifacts
+samples/bin/
+samples/obj/
+native/build/
+build/native/
+
+# Test outputs
+tests/*/bin/*
+tests/*/obj/*
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Environment-specific
+.env
+.env.local
+.env.*.local
+
+# Log files
+*.log
+nuget.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Coverage reports
+coverage.xml
+coverage.json
+lcov.info
+
+# NuGet cache (optional)
+artifacts/packages/*.nupkg
