@@ -12,9 +12,24 @@ AGPL-3.0 .NET wrapper for the [OpenALPR](https://www.openalpr.com/) license plat
 
 - P/Invoke wrapper for OpenALPR native C API
 - Full control over configuration and runtime data paths
-- Cross-platform compatible (.NET 10.0)
+- Cross-platform compatible (.NET 10.0 / .NET 8.0 / .NET Framework 4.8 on Windows)
 - Comprehensive error handling with detailed exception messages
 - Resource-safe memory management via `IDisposable` pattern
+
+### API Capabilities
+
+| Method | Description | Returns |
+|--------|-------------|---------|
+| `Recognize(ReadOnlyMemory<byte>)` | Single image recognition | `PlateRecognitionResult` |
+| `RecognizeBatch(IEnumerable<ReadOnlyMemory<byte>>)` | Batch processing | `BatchRecognitionResult` with aggregated results and errors |
+| `RecognizeAsync(..., CancellationToken)` | Async single image recognition | `Task<PlateRecognitionResult>` |
+| `RecognizeBatchAsync(..., CancellationToken)` | Async batch processing | `Task<BatchRecognitionResult>` |
+
+### Progress Events
+
+- `RecognitionProgress` - Firing on each image during batch processing (Current/Total/Progress)
+- `RecognitionError` - Error reporting with detailed error messages and stack traces
+- `Completed` - Final batch result after all images processed
 
 ## 🚀 Quick Start
 
@@ -41,6 +56,8 @@ make native-build   # Build native bridge (requires CMake + OpenALPR dev librari
 
 ## 💻 Managed API Usage
 
+### Basic Single Image Recognition
+
 ```csharp
 using OpenAlprWrapper;
 
@@ -65,41 +82,76 @@ foreach (var plate in result.Plates)
 }
 ```
 
-### API Reference
-
-| Method | Description | Returns |
-|--------|-------------|---------|
-| `Recognize(ReadOnlyMemory<byte>)` | Recognizes license plates in image data | `PlateRecognitionResult` with width, height, processing time, and detected plates |
-
-### Plate Recognition Result
+### Batch Processing
 
 ```csharp
-public record PlateRecognitionResult(
-    int ImageWidth,
-    int ImageHeight,
-    float ProcessingTimeMs,
-    IReadOnlyList<RecognizedPlate> Plates
-);
+using var recognizer = new OpenAlprRecognizer(new OpenAlprOptions 
+{ 
+    Country = "us", 
+    TopN = 10 
+});
 
-public record RecognizedPlate(
-    string BestText,        // Best plate text (e.g., "ABC123")
-    float Confidence,       // Recognition confidence percentage
-    IReadOnlyList<PlateCandidate> Candidates,  // Alternative readings
-    IReadOnlyList<PlatePoint> Corners          // Plate corner coordinates [x,y]
-);
+var images = File.ReadAllBytes("image1.jpg"), 
+             File.ReadAllBytes("image2.jpg");
 
-public readonly record struct PlatePoint(int X, int Y);
+var result = recognizer.RecognizeBatch(images);
+Console.WriteLine($"Processed {result.TotalImages} images, found {result.SuccessCount} plates with avg time {(result.AverageProcessingTimeMs ?? 0):F2}ms");
+```
+
+### Asynchronous Recognition
+
+```csharp
+using var recognizer = new OpenAlprRecognizer(new OpenAlprOptions 
+{ 
+    Country = "us", 
+    TopN = 10 
+});
+
+var images = File.ReadAllBytes("image1.jpg"), 
+             File.ReadAllBytes("image2.jpg");
+
+// Async single image recognition
+var result = await recognizer.RecognizeAsync(imageBytes, CancellationToken.None);
+Console.WriteLine($"Detected: {result.Plates[0].BestText} ({result.Plates[0].Confidence:F2}%)");
+
+// Async batch processing
+var batchResult = await recognizer.RecognizeBatchAsync(images, CancellationToken.None);
+Console.WriteLine($"Completed with {batchResult.SuccessCount}/{batchResult.TotalImages} successful");
+```
+
+### Progress Event Handling
+
+```csharp
+using var recognizer = new OpenAlprRecognizer(new OpenAlprOptions 
+{ 
+    Country = "us", 
+    TopN = 10 
+});
+
+// Subscribe to progress events
+recognizer.RecognitionProgress += (sender, e) => 
+    Console.WriteLine($"Processing image {e.Current}/{e.Total} [{(e.Progress * 100:F0)}%]");
+
+recognizer.RecognitionError += (sender, e) => 
+    Console.WriteLine($"Error at index {e.ImageIndex}: {e.ErrorMessage}");
+
+recognizer.Completed += (sender, e) => 
+    Console.WriteLine($"Batch completed: {e.Result.SuccessCount}/{e.Result.TotalImages} success");
+
+var result = recognizer.RecognizeBatch(images);
 ```
 
 ## 📦 NuGet Package Installation
 
-After building:
-
+### After building locally
 ```bash
 make nuget
-
-# Add to your project
 dotnet add package OpenAlprWrapper --source ./artifacts/packages
+```
+
+### From NuGet.org (when published)
+```bash
+dotnet add package OpenAlprWrapper
 ```
 
 ### Native Assets (Optional)
@@ -115,7 +167,7 @@ For .NET 8+ projects, you can include pre-built native libraries as NuGet assets
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `Country` | `string` | `"us"` | OpenALPR country code for plate recognition model |
+| `Country` | `string` | `"us"` | OpenALPR country code for plate recognition model (e.g., "us", "eu") |
 | `ConfigurationFile` | `string?` | `null` | Optional custom configuration file path |
 | `RuntimeDirectory` | `string?` | `null` | Override default runtime data directory |
 | `TopN` | `int` | `10` | Maximum number of candidate plates to return |
@@ -126,12 +178,12 @@ For .NET 8+ projects, you can include pre-built native libraries as NuGet assets
 ### Common Exceptions
 
 | Exception | Cause | Solution |
-|-----------|-------|----------|
-| `OpenAlprException: "Failed to initialize OpenALPR engine..."` | Native library missing or runtime data not installed | Install OpenALPR native library and copy runtime files |
+|-----------|-------|---------|
+| `OpenAlprException: "Failed to initialize..."` | Native library missing or runtime data not installed | Install OpenALPR native library and copy runtime files |
 | `DllNotFoundException` | Platform-specific .so/.dll not found | Verify platform-specific native binary exists |
 | `EntryPointNotFoundException` | Expected C API exports not found | Ensure using correct native build with required symbols |
 | `ArgumentException: "Image data must not be empty."` | Passed empty or null image bytes | Validate image data before calling `Recognize()` |
-| `OpenAlprException: "Recognition failed for country='us'..."` | No plate detected in image | Image may not contain valid license plate or is too dark/blurry |
+| `OpenAlprException: "Recognition failed..."` | No plate detected in image | Image may not contain valid license plate or is too dark/blurry |
 
 ### Error Messages Include Context
 
@@ -140,23 +192,12 @@ Exception messages now include:
 - Suggested runtime data installation path (when configured)
 - Original native-level errors for debugging
 
-## 🧪 Sample Application
-
-Run the sample app with your images:
-
-```bash
-# Place JPEG/PNG/BMP/GIF files in samples/images/
-dotnet run --project samples/OpenAlprWrapper.Sample.csproj
-```
-
-The sample enumerates all supported image formats and prints detected plates.
-
 ## 📚 Documentation
 
 Comprehensive documentation available in `docs/` directory:
 
 - **[API Reference](docs/api/README.md)** - Complete API documentation with examples
-- **[Architecture](docs/architecture.md)** - System design and implementation patterns
+- **[Architecture](docs/architecture.md)** - System design and implementation patterns  
 - **[Installation Guide](docs/installation.md)** - Platform-specific setup instructions
 - **[Troubleshooting Guide](docs/troubleshooting.md)** - Common issues and solutions
 - **[Contributing](docs/CONTRIBUTING.md)** - Development guidelines and code style
@@ -169,13 +210,13 @@ OpenALPRWrapper/
 │   └── OpenAlpr.Net/
 │       ├── Models.cs              # Data models (Options, Results)
 │       ├── OpenAlprRecognizer.cs  # Main recognizer implementation
-│       └── NativeOpenAlprApi.cs   # P/Invoke bridge wrapper
+│       ├── NativeOpenAlprApi.cs   # P/Invoke bridge wrapper
+│       └── Events.cs              # Progress events and delegates
 ├── tests/OpenAlpr.Net.Tests/      # Unit tests with mocks
 ├── samples/                       # Example applications
 │   └── images/                    # Test images
 ├── native/openalpr-dotnet-bridge/ # Native C++ bridge source
 ├── docs/                         # Technical documentation
-│   ├── README.md                 # Documentation index
 │   ├── api/                      # API reference
 │   ├── architecture.md           # Architecture overview
 │   ├── installation.md           # Installation guide
@@ -183,6 +224,7 @@ OpenALPRWrapper/
 │   └── CONTRIBUTING.md           # Contributing guidelines
 ├── Makefile                       # Build automation
 ├── README.md                     # This file
+├── VERSION                       # Semantic versioning file
 └── .gitignore                    # Git ignore rules
 ```
 

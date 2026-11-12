@@ -58,4 +58,4 @@ coverage.json
 lcov.info
 
 # NuGet cache (optional)
-artifacts/packages/*.nupkg
+artifacts/packages/*.snupkg

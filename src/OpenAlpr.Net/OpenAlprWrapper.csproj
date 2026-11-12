@@ -1,14 +1,19 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
+    <!-- Multi-target framework support for broader compatibility -->
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
+    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net48</TargetFrameworks>
+    
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    
+    <!-- Package metadata -->
     <PackageId>OpenAlprWrapper</PackageId>
-    <Version>0.1.0</Version>
+    <Version Condition="'$(Version)' == ''">0.1.0</Version>
     <Authors>OpenALPRWrapper contributors</Authors>
     <Description>.NET wrapper for OpenALPR license plate recognition. Provides P/Invoke bindings to the native OpenALPR C API.</Description>
     <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
@@ -32,6 +37,9 @@
 
   <!-- Native assets support for .NET 8+ (optional, set to true to include) -->
   <PropertyGroup Condition="'$(IncludeNativeAssetsJson)' == 'true'">
-    <TargetFrameworks>net10.0</TargetFrameworks>
+    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
   </PropertyGroup>
+
+  <!-- Version props file reference for semantic versioning -->
+  <Import Project="Version.props" Condition="Exists('Version.props')" />
 </Project>

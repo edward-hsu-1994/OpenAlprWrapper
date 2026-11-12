@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <!-- Semantic versioning support -->
+    <MajorVersion Condition="'$(MajorVersion)' == ''">0</MajorVersion>
+    <MinorVersion Condition="'$(MinorVersion)' == ''">1</MinorVersion>
+    <PatchVersion Condition="'$(PatchVersion)' == ''">0</PatchVersion>
+    
+    <!-- Default version without prerelease is 0.1.0 -->
+    <Version>$(MajorVersion).$(MinorVersion).$(PatchVersion)</Version>
+  </PropertyGroup>
+</Project>

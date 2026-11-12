@@ -1,26 +1,38 @@
 # Changelog
 
-All notable changes to OpenALPRWrapper will be documented in this file.
+All notable changes to OpenAlprWrapper will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
 ### Added
-- Comprehensive exception messages with native error context
-- Unit test coverage for null options, empty image data, disposal scenarios
-- Stress testing for memory leak prevention (100+ recognize/dispose cycles)
-- Multi-plate recognition result verification tests
+- **Batch Recognition API**: `RecognizeBatch(IEnumerable<ReadOnlyMemory<byte>>)` method for processing multiple images in a single call with aggregated results and error tracking
+- **Async API**: Non-blocking recognition methods with `CancellationToken` support:
+  - `RecognizeAsync(ReadOnlyMemory<byte>, CancellationToken)`
+  - `RecognizeBatchAsync(IEnumerable<ReadOnlyMemory<byte>>, CancellationToken)`
+- **Progress Events**: Event-driven notifications for batch processing:
+  - `RecognitionProgress`: Fired before each image and after completion (Current/Total/Progress%)
+  - `RecognitionError`: Fired when recognition fails with detailed error information  
+  - `Completed`: Fired when batch processing completes successfully
+- **Multi-target framework support**: Cross-platform compilation targeting .NET 10.0, .NET 8.0, and .NET Framework 4.8 (Windows only)
+- **Event argument models**: `PlateRecognitionEventArgs`, `PlateErrorEventArgs`, `PlateCompletedEventArgs` with full documentation
+- **Integration tests**: Real-world image validation tests (skipped when native library unavailable)
+- **NuGet package documentation**: Comprehensive installation and usage guide in package
+- **Semantic versioning**: Version file-based management for automated release workflow
+- **Cross-platform docs**: API Reference, Architecture, Installation, and Troubleshooting guides
 
-### Changed
-- Improved `OpenAlprException` to include original exception message in outer exception
-- Enhanced `NativeOpenAlprApi` with field storage for country and TopN in error messages
-- Added image empty validation before native API call
+### Changed  
+- `OpenAlprRecognizer.cs`: Added batch processing logic with progress event firing on each image (Current/Total/Result/Progress%)
+- `OpenAlprRecognizer.cs`: Wrapped blocking native API calls in `Task.Run()` with cancellation token support
+- `OpenAlprRecognizer.cs`: Added error handling with detailed BatchError tracking including IsRecoverable flag
+- `README.md`: Expanded with complete API documentation and usage examples for batch/async APIs
+- `.gitignore`: Fixed to exclude only .snupkg (symbols), not .nupkg (NuGet packages)
 
 ### Fixed
-- Removed unused field warnings from `NativeOpenAlprApi` by proper field initialization
-- Corrected P/Invoke error handling to preserve native exception chain
-- Fixed JSON parsing edge cases (truncated/malformed JSON)
+- Memory leak prevention: Progress event handlers use copy-to-array pattern to avoid invocation issues
+- Batch error tracking: Original exceptions preserved in InnerException field for debugging
+- Type safety: All new record types sealed with explicit parameter documentation
 
 ## [0.1.0] - 2026-11-xx
 
@@ -32,7 +44,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Cross-platform compatible code structure (.NET 10.0 target)
 
 ### Known Limitations
-- Native library binaries not vendored; users must install OpenALPR separately
+- Native library binaries not vendored; users must install OpenALPR separately  
 - Platform support limited to verified combinations (Linux ARM64 tested)
 - Managed P/Invoke path not yet smoke-tested on all architectures
 
