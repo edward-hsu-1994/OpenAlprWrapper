@@ -29,7 +29,7 @@ jobs:
       run: dotnet build --configuration ${{ env.BUILD_CONFIGURATION }} --no-restore --verbosity minimal
 
     - name: Test
-      run: dotnet test --no-build --verbosity minimal
+      run: dotnet test --configuration ${{ env.BUILD_CONFIGURATION }} --verbosity minimal
 
     - name: Pack NuGet package
       run: dotnet pack --configuration ${{ env.BUILD_CONFIGURATION }} --output ./artifacts/packages

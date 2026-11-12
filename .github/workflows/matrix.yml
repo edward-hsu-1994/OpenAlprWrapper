@@ -30,11 +30,7 @@ jobs:
       run: dotnet build --configuration Release --no-restore --verbosity minimal
 
     - name: Test
-      run: dotnet test --no-build --verbosity normal
-      env:
-        # Skip integration tests that need native library
-        XUNIT_SKIP_OPENALPRWRAPPERTESTSINTEGRATIONTESTS__INTEGRATIONEMPTYIMAGERETURNSEMPYRESULTS: 'true'
-        XUNIT_SKIP_OPENALPRWRAPPERTESTSINTEGRATIONTESTS__INTEGRATIONBATCHWITHMULTIPLEIMAGESRETURNSCORRECTCOUNTS: 'true'
+      run: dotnet test --configuration Release --verbosity normal
 
     - name: Pack NuGet package
       run: dotnet pack --configuration Release --output ./artifacts/packages
@@ -46,7 +42,3 @@ jobs:
         path: artifacts/packages/*.nupkg
         retention-days: 15
 
-    - name: Publish to NuGet.org (optional, requires API key)
-      run: |
-        echo "To publish to NuGet.org, add a NuGet push step with API key"
-        dotnet nuget push artifacts/packages/OpenAlprWrapper.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} || echo "NuGet API key not set, skipping publish"
