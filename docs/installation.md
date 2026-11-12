@@ -102,10 +102,15 @@ dotnet add package OpenAlprWrapper --source ./artifacts/packages --version 0.1.0
 
 ### Publish to NuGet.org (Optional)
 
-The tag-triggered GitHub Actions workflow only builds a downloadable package
-artifact; it does not publish to NuGet.org. To publish a locally built or
-downloaded package, set the version to match the package filename and provide
-your API key through the `NUGET_API_KEY` environment variable:
+The tag-triggered GitHub Actions workflow publishes the package to NuGet.org
+using Trusted Publishing and uploads it as a downloadable artifact. It obtains
+a short-lived publishing credential through GitHub OIDC; no long-lived NuGet
+API key is stored in GitHub. Before the first release, configure a NuGet.org
+Trusted Publishing policy for GitHub owner `edward-hsu-1994`, repository
+`OpenALPRWrapper`, and workflow filename `publish.yml`. Set the repository
+Actions variable `NUGET_USER` to your NuGet.org profile name, not your email.
+For local manual publishing, a NuGet API key is still required; set it in
+`NUGET_API_KEY` before running the command below:
 
 ```bash
 PACKAGE_VERSION=0.1.0

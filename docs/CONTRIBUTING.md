@@ -208,10 +208,10 @@ This project follows [Semantic Versioning](https://semver.org/) (SemVer):
 - `MINOR`: Backward-compatible new features (e.g., adding new methods or options).
 - `PATCH`: Backward-compatible bug fixes and documentation updates.
 
-### NuGet Package Builds
+### NuGet Package Builds and Publishing
 
-GitHub Actions builds and uploads NuGet packages only when a semantic version
-tag is pushed. Use the `vMAJOR.MINOR.PATCH` format, for example:
+GitHub Actions builds and publishes the NuGet package only when a semantic
+version tag is pushed. Use the `vMAJOR.MINOR.PATCH` format, for example:
 
 ```bash
 git tag v1.2.3
@@ -220,8 +220,12 @@ git push origin v1.2.3
 
 The workflow removes the leading `v` and uses the remaining tag value as the
 NuGet package version. SemVer prerelease tags such as `v1.2.3-rc.1` are also
-supported. The package is uploaded as a workflow artifact; it is not
-automatically published to NuGet.org.
+supported. The package is uploaded as a workflow artifact and published to
+NuGet.org via Trusted Publishing; no long-lived API key is stored in GitHub.
+Before the first release, configure a NuGet.org Trusted Publishing policy for
+GitHub owner `edward-hsu-1994`, repository `OpenALPRWrapper`, and workflow
+filename `publish.yml`. Also set the repository Actions variable `NUGET_USER`
+to the NuGet.org profile name (not email address).
 
 ### Pre-Release Checklist
 
