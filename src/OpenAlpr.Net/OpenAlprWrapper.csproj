@@ -22,7 +22,7 @@
     <RepositoryUrl>https://github.com/OpenALPRWrapper/OpenALPRWrapper.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <IncludeNativeAssetsJson>true</IncludeNativeAssetsJson>
   </PropertyGroup>
 

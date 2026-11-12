@@ -32,13 +32,3 @@ jobs:
     - name: Test
       run: dotnet test --configuration Release --verbosity normal
 
-    - name: Pack NuGet package
-      run: dotnet pack --configuration Release --output ./artifacts/packages
-
-    - name: Upload packages
-      uses: actions/upload-artifact@v4
-      with:
-        name: nuget-packages-${{ matrix.os }}
-        path: artifacts/packages/*.nupkg
-        retention-days: 15
-

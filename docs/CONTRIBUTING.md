@@ -208,6 +208,21 @@ This project follows [Semantic Versioning](https://semver.org/) (SemVer):
 - `MINOR`: Backward-compatible new features (e.g., adding new methods or options).
 - `PATCH`: Backward-compatible bug fixes and documentation updates.
 
+### NuGet Package Builds
+
+GitHub Actions builds and uploads NuGet packages only when a semantic version
+tag is pushed. Use the `vMAJOR.MINOR.PATCH` format, for example:
+
+```bash
+git tag v1.2.3
+git push origin v1.2.3
+```
+
+The workflow removes the leading `v` and uses the remaining tag value as the
+NuGet package version. SemVer prerelease tags such as `v1.2.3-rc.1` are also
+supported. The package is uploaded as a workflow artifact; it is not
+automatically published to NuGet.org.
+
 ### Pre-Release Checklist
 
 - [ ] All unit tests pass across target frameworks (.NET 10.0 / .NET 8.0)
