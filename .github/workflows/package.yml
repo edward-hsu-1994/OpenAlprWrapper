@@ -36,12 +36,12 @@ jobs:
         run: dotnet restore src/OpenAlpr.Net/OpenAlprWrapper.csproj
 
       - name: Pack NuGet package
-        run: dotnet pack src/OpenAlpr.Net/OpenAlprWrapper.csproj --configuration Release --no-restore --output ./artifacts/packages -p:Version='${{ steps.version.outputs.value }}'
+        run: dotnet pack src/OpenAlpr.Net/OpenAlprWrapper.csproj --configuration Release --no-restore --output "${{ runner.temp }}/packages" -p:Version='${{ steps.version.outputs.value }}'
 
       - name: Upload NuGet packages
         uses: actions/upload-artifact@v4
         with:
           name: OpenAlprWrapper-${{ steps.version.outputs.value }}
-          path: artifacts/packages/*.nupkg
+          path: ${{ runner.temp }}/packages/*.nupkg
           if-no-files-found: error
           retention-days: 30

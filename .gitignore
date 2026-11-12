@@ -59,6 +59,7 @@ lcov.info
 
 # NuGet cache (optional)
 artifacts/packages/*.snupkg
+artifacts/packages/*.nupkg
 
 # Local planning artifacts
 docs/superpowers/
