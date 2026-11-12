@@ -1,38 +1,38 @@
 # Contributing Guidelines
 
-感謝你想為 OpenALPRWrapper 專案貢獻！本文檔說明如何參與專案開發。
+Thank you for your interest in contributing to OpenALPRWrapper! This document outlines how to participate in project development, adhere to our standards, and submit contributions.
 
 ## 📋 Code of Conduct
 
-本專案遵循開放原始碼社區協作原則：
+This project follows open-source community collaboration principles:
 
-- **尊重他人**：對待所有參與者都保持尊重和包容
-- **建設性反饋**：提供具體、有幫助的意見，避免人身攻擊
-- **歡迎新手**：鼓勵新人參與和提問
+- **Respect Others**: Treat all participants with respect, courtesy, and inclusion.
+- **Constructive Feedback**: Provide actionable, helpful feedback and avoid personal remarks.
+- **Welcome Beginners**: Encourage newcomers to ask questions and get involved.
 
 ---
 
 ## 🏗️ Architecture & Design Principles
 
-### 核心設計原則
+### Core Design Principles
 
 1. **KISS (Keep It Simple, Stupid)**
-   - 保持代碼簡單直觀，避免過度抽象
-   - 優先使用直截了當的解決方案而非複雜的設計模式
+   - Keep code simple, readable, and intuitive; avoid unnecessary abstractions.
+   - Favor straightforward solutions over complex design patterns.
 
-2. **依賴倒轉 (Dependency Inversion)**
-   - Managed 層不依賴 native 實現細節
-   - 通過介面隔離 P/Invoke 橋接邏輯
+2. **Dependency Inversion**
+   - The managed layer does not depend on concrete native implementation details.
+   - P/Invoke bridging logic is isolated behind interfaces (`IOpenAlprNativeApi`).
 
-3. **資源確定性釋放**
-   - 所有 native 資源通過 `IDisposable` 模式管理
-   - 強制使用 `using` 語句確保正確釋放
+3. **Deterministic Resource Disposal**
+   - All native resources are managed via the standard `IDisposable` pattern.
+   - Enforce the use of `using` declarations/statements to ensure timely resource cleanup.
 
-4. **錯誤處理最佳化**
-   - 保留原始例外訊息用於調試
-   - 提供明確的情境資訊（如 failed country、runtime path）
+4. **Context-Rich Error Handling**
+   - Preserve original exception details to facilitate debugging.
+   - Include explicit contextual details in error messages (such as country code, TopN, or runtime paths).
 
-### 程式碼風格規範
+### Code Style Guidelines
 
 ```csharp
 // ✅ DO: Clear, descriptive XML documentation
@@ -62,25 +62,25 @@ internal OpenAlprRecognizer(OpenAlprOptions options, IOpenAlprNativeApi nativeAp
     this.nativeApi = nativeApi;
 }
 
-// ❌ DON'T: Scatter P/Invoke calls in business logic
+// ❌ DON'T: Scatter P/Invoke calls across business logic
 ```
 
 ---
 
 ## 🧪 Testing Requirements
 
-### 必須覆蓋的測試場景
+### Required Test Scenarios
 
-| 類別 | 測試要求 |
-|------|----------|
-| **Constructor Validation** | Null checks, validation exceptions |
+| Category | Testing Requirement |
+|----------|---------------------|
+| **Constructor Validation** | Null checks and argument validation exceptions |
 | **Empty Results** | No plates detected edge case |
-| **Multiple Plates** | Batch recognition with multiple detections |
-| **Resource Management** | Dispose pattern, no memory leaks |
-| **Exception Scenarios** | Native errors, JSON parsing failures |
+| **Multiple Plates** | Recognition with multiple detections |
+| **Resource Management** | `IDisposable` pattern and no native memory leaks |
+| **Exception Scenarios** | Native errors and JSON parsing failures |
 | **Stress Testing** | 100+ Recognize/Dispose cycles |
 
-### 測試結構範例
+### Test Structure Example
 
 ```csharp
 [Fact]
@@ -157,12 +157,12 @@ make nuget PACKAGE_OUTPUT_DIR=./artifacts/packages
 
 ### Code Review Process
 
-1. **本地審查：**
-   - 檢查是否遵循程式碼風格規範
-   - 驗證 XML documentation 完整性
-   - 確保無編譯警告
+1. **Local Review:**
+   - Verify compliance with code style guidelines.
+   - Ensure XML documentation is complete on public types and members.
+   - Verify that the build succeeds without warnings.
 
-2. **提交前檢查：**
+2. **Pre-Commit Checks:**
    ```bash
    # Clean build
    dotnet clean --configuration Release
@@ -171,11 +171,11 @@ make nuget PACKAGE_OUTPUT_DIR=./artifacts/packages
    # Verify tests pass
    dotnet test --configuration Release
    
-   # Check for warnings
+   # Check for warnings as errors
    dotnet build -warnaserror
    ```
 
-3. **Commit Message 格式：**
+3. **Commit Message Format:**
    ```text
    type(scope): subject
 
@@ -191,10 +191,10 @@ make nuget PACKAGE_OUTPUT_DIR=./artifacts/packages
 
 ### Pull Request Guidelines
 
-- **描述變更：** 說明為什麼需要這個變更
-- **引用相關問題：** GitHub issue 編號或 feature request
-- **測試覆蓋率：** 確保新增功能有對應測試
-- **文件更新：** API 變更需更新 README.md 和 docs/
+- **Describe Changes:** Explain the problem being solved and why this change is necessary.
+- **Reference Issues:** Link related GitHub issues or feature requests.
+- **Test Coverage:** Ensure new functionality or bug fixes include corresponding tests.
+- **Documentation Updates:** When changing public APIs, update `README.md` and the documents under `docs/`.
 
 ---
 
@@ -202,40 +202,40 @@ make nuget PACKAGE_OUTPUT_DIR=./artifacts/packages
 
 ### Versioning Strategy
 
-採用 [Semantic Versioning](https://semver.org/)：
+This project follows [Semantic Versioning](https://semver.org/) (SemVer):
 
-- `MAJOR`: Breaking API changes (e.g., remove deprecated methods)
-- `MINOR`: New features, backward compatible
-- `PATCH`: Bug fixes, documentation updates
+- `MAJOR`: Breaking API changes (e.g., removing or altering existing public methods).
+- `MINOR`: Backward-compatible new features (e.g., adding new methods or options).
+- `PATCH`: Backward-compatible bug fixes and documentation updates.
 
 ### Pre-Release Checklist
 
-- [ ] All unit tests pass
-- [ ] No compiler warnings/errors
-- [ ] XML documentation complete on public APIs
-- [ ] README.md updated with new features
-- [ ] CHANGELOG.md updated
-- [ ] NuGet package builds successfully
+- [ ] All unit tests pass across target frameworks (.NET 10.0 / .NET 8.0)
+- [ ] No compiler warnings or build errors
+- [ ] XML documentation is complete on all public APIs
+- [ ] Root `README.md` and `docs/` updated with changes
+- [ ] `CHANGELOG.md` updated with release notes
+- [ ] NuGet package builds and packages successfully
 - [ ] Sample application tested with images
 
 ---
 
 ## 🚀 Future Enhancements
 
-### Planned Features (v0.2.0+)
+### Planned Features (Roadmap)
 
-| 功能 | 優先級 | 說明 |
-|------|--------|------|
-| **批次處理 API** | High | `BatchRecognize(IEnumerable<byte>)` |
-| **Async 支援** | Medium | `RecognizeAsync(..., CancellationToken)` |
-| **進度回調** | Medium | `IProgress<float>` for long operations |
-| **事件驅動錯誤** | Low | `EventPattern<PlateErrorEventArgs>` |
+| Feature | Priority | Description |
+|---------|----------|-------------|
+| **Stream Recognition** | Medium | `Recognize(Stream imageStream)` / `RecognizeAsync(Stream imageStream)` |
+| **Pre-built Native Bundling** | Medium | Cross-platform native binary packaging within NuGet packages |
+| **Region Tuning & Masks** | Low | Fine-grained detection masks and country-specific tuning parameters |
+| **Memory Pool Optimization** | Low | Shared buffer pooling for high-throughput batch recognition |
 
 ### Performance Optimizations
 
-- [ ] JSON parsing pre-warming / caching
-- [ ] Image resizing utilities (optional)
-- [ ] Memory pool for large batch processing
+- [ ] Pre-allocated buffers for native string marshalling
+- [ ] Built-in image resizing and normalization utilities
+- [ ] High-throughput memory pool integration for large batch jobs
 
 ---
 
@@ -243,7 +243,7 @@ make nuget PACKAGE_OUTPUT_DIR=./artifacts/packages
 
 ### API Documentation
 
-所有公開類型必須包含完整 XML 文件：
+All public types and members must include complete XML documentation:
 
 ```csharp
 /// <summary>
@@ -255,22 +255,27 @@ public sealed class OpenAlprOptions
     /// Gets or sets the training-data country code. Defaults to "us".
     /// </summary>
     public string Country { get; init; } = "us";
-    
-    /// <param name="message">The error message describing the failure.</param>
-    /// <param name="innerException">Optional original exception providing context.</param>
-    /// <exception cref="OpenAlprException">Thrown when OpenALPR runtime fails to load.</exception>
-    public OpenAlprException(string message, Exception? innerException = null);
+}
+
+/// <summary>
+/// Managed OpenALPR recognizer with deterministic native-resource ownership.
+/// </summary>
+public sealed class OpenAlprRecognizer : IPlateRecognizer
+{
+    // ...
 }
 ```
 
-### Documentation Updates
+### Documentation Maintenance
 
-| 文件類型 | 更新時機 |
-|----------|----------|
-| **README.md** | New feature added / Breaking change |
-| **CHANGELOG.md** | Every release (see versioning section) |
-| **docs/api/README.md** | API surface changes |
-| **docs/architecture.md** | Architecture refactoring |
+| Document | Update Trigger |
+|----------|----------------|
+| **README.md** | New feature added or breaking changes introduced |
+| **CHANGELOG.md** | Every release (following SemVer) |
+| **docs/api/README.md** | Public API surface changes or model updates |
+| **docs/architecture.md** | Architectural refactoring or component changes |
+| **docs/installation.md** | Changes to build steps, dependencies, or packaging |
+| **docs/troubleshooting.md** | New known issues, workarounds, or diagnostic tools |
 
 ---
 
@@ -278,17 +283,17 @@ public sealed class OpenAlprOptions
 
 ### Reporting Issues
 
-使用 GitHub Issues 報告問題時，請提供：
+When reporting issues via GitHub Issues, please include:
 
-- **平台與版本：** Linux/Windows/macOS, .NET version
-- **OpenALPR 版本：** Installed native library version
-- **完整錯誤訊息：** Including inner exception messages
-- **最小復現步驟：** Minimal code to reproduce the issue
-- **配置參數：** `OpenAlprOptions` settings used
+- **Platform & Environment:** Operating system (Linux/Windows/macOS), architecture, .NET version
+- **OpenALPR Version:** Native library version and build source
+- **Full Error Messages:** Complete exception message, including inner exceptions and stack traces
+- **Minimal Reproduction:** Minimal code sample demonstrating the issue
+- **Configuration:** `OpenAlprOptions` values used
 
 ### Security Vulnerabilities
 
-發現安全問題請直接聯繫維護者，不要公開披露：
+If you discover a security vulnerability, please report it privately to the maintainers rather than opening a public issue:
 
 📧 security@[your-email].example.com
 
@@ -296,7 +301,7 @@ public sealed class OpenAlprOptions
 
 ## 📜 License
 
-本專案採用 AGPL-3.0 授權。貢獻代碼表示你同意在 AGPL-3.0 下分發你的變更。
+This project is licensed under the AGPL-3.0 license. By contributing code, you agree that your contributions will be licensed under the same AGPL-3.0 license terms:
 
 ```
 By contributing to this project, you agree that your contributions will be licensed under the same AGPL-3.0 license.
@@ -307,8 +312,8 @@ By contributing to this project, you agree that your contributions will be licen
 ## 🎓 Learning Resources
 
 - [OpenALPR Official Documentation](https://docs.openalpr.com/)
-- [.NET P/Invoke Best Practices](https://learn.microsoft.com/dotnet/api/system.runtime.interopservices.dllimportattribute)
-- [Dependency Injection Patterns](https://learn.microsoft.com/dotnet/fundamentals/design-patterns/inversion-of-control)
+- [.NET P/Invoke Best Practices](https://learn.microsoft.com/dotnet/standard/native-interop/best-practices)
+- [Dependency Injection in .NET](https://learn.microsoft.com/dotnet/core/extensions/dependency-injection)
 
 ---
 

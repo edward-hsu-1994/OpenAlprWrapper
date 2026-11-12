@@ -1,10 +1,10 @@
 # Architecture
 
-OpenALPRWrapper 架構設計與內部實現詳解
+Detailed architectural design and internal implementation of OpenALPRWrapper.
 
 ## 🏗️ Overview
 
-OpenALPRWrapper 是一個 P/Invoke 橋接庫，提供 .NET 應用程式對 OpenALPR native C API 的封裝。採用**依賴倒轉（Dependency Inversion）**和**資源確定性釋放（Deterministic Resource Disposal）**模式。
+OpenALPRWrapper is a managed P/Invoke bridge library that provides .NET applications with an idiomatic, high-performance wrapper around the native OpenALPR C API. It is designed around **Dependency Inversion** and **Deterministic Resource Disposal**.
 
 ## 📐 Layered Architecture
 
@@ -12,48 +12,63 @@ OpenALPRWrapper 是一個 P/Invoke 橋接庫，提供 .NET 應用程式對 OpenA
 classDiagram
     class IPlateRecognizer {
         <<Interface>>
-        PlateRecognitionResult Recognize(ReadOnlyMemory~byte~ image)
+        +Recognize(ReadOnlyMemory~byte~ image) PlateRecognitionResult
+        +RecognizeBatch(IEnumerable~ReadOnlyMemory~byte~~ images) BatchRecognitionResult
+        +RecognizeAsync(ReadOnlyMemory~byte~ image, CancellationToken cancellationToken) Task~PlateRecognitionResult~
+        +RecognizeBatchAsync(IEnumerable~ReadOnlyMemory~byte~~ images, CancellationToken cancellationToken) Task~BatchRecognitionResult~
     }
     
     class OpenAlprRecognizer {
-        +IOpenAlprNativeApi nativeApi
-        +bool disposed
-        -Recognize(ReadOnlyMemory<byte>)
-        -Dispose()
+        -IOpenAlprNativeApi nativeApi
+        -bool disposed
+        +Recognize(ReadOnlyMemory~byte~ image) PlateRecognitionResult
+        +RecognizeBatch(IEnumerable~ReadOnlyMemory~byte~~ images) BatchRecognitionResult
+        +RecognizeAsync(ReadOnlyMemory~byte~ image, CancellationToken cancellationToken) Task~PlateRecognitionResult~
+        +RecognizeBatchAsync(IEnumerable~ReadOnlyMemory~byte~~ images, CancellationToken cancellationToken) Task~BatchRecognitionResult~
+        +Dispose() void
     }
     
+    class IOpenAlprNativeApi {
+        <<Interface>>
+        +Recognize(ReadOnlyMemory~byte~ image) NativeRecognitionResult
+        +Dispose() void
+    }
+
     class NativeOpenAlprApi {
-        +IntPtr handle
-        +bool disposed
-        -Recognize(ReadOnlyMemory<byte>)
-        -Dispose()
+        -IntPtr handle
+        -string country
+        -int topN
+        -bool disposed
+        +Recognize(ReadOnlyMemory~byte~ image) NativeRecognitionResult
+        +Dispose() void
     }
     
     class OpenAlprOptions {
-        Country string
-        ConfigurationFile string?
-        RuntimeDirectory string?
-        TopN int
-        DetectRegion bool
-        -Validate()
+        +string Country
+        +string ConfigurationFile
+        +string RuntimeDirectory
+        +int TopN
+        +bool DetectRegion
+        +Validate() void
     }
     
     class PlateRecognitionResult {
-        ImageWidth int
-        ImageHeight int
-        ProcessingTimeMs float
-        Plates IReadOnlyList~RecognizedPlate~
+        +int ImageWidth
+        +int ImageHeight
+        +float ProcessingTimeMs
+        +IReadOnlyList~RecognizedPlate~ Plates
     }
     
     class RecognizedPlate {
-        BestText string
-        Confidence float
-        Candidates IReadOnlyList~PlateCandidate~
-        Corners IReadOnlyList~PlatePoint~
+        +string BestText
+        +float Confidence
+        +IReadOnlyList~PlateCandidate~ Candidates
+        +IReadOnlyList~PlatePoint~ Corners
     }
     
-    IPlateRecognizer *-- OpenAlprRecognizer : implements
-    OpenAlprRecognizer *-- NativeOpenAlprApi : contains
+    IPlateRecognizer <|.. OpenAlprRecognizer : implements
+    IOpenAlprNativeApi <|.. NativeOpenAlprApi : implements
+    OpenAlprRecognizer o-- IOpenAlprNativeApi : uses
 ```
 
 ## 🔄 Component Flow
@@ -65,23 +80,25 @@ sequenceDiagram
     participant Client as Application Code
     participant Recog as OpenAlprRecognizer
     participant NativeApi as NativeOpenAlprApi
-    participant OpenALPR as C ABI Bridge
+    participant OpenALPR as C ABI Bridge (openalpr_dotnet)
     
-    Note over Client,OpenALPR: 1. Initialize
+    Note over Client,OpenALPR: 1. Initialization
     Client->>Recog: new OpenAlprRecognizer(options)
     Recog->>NativeApi: new NativeOpenAlprApi(options)
     NativeApi->>OpenALPR: alpr_create(country, config, runtime, topN, detectRegion)
+    OpenALPR-->>NativeApi: Native handle pointer (IntPtr)
     
     Note over Client,OpenALPR: 2. Recognition
     Client->>Recog: recognizer.Recognize(imageBytes)
     Recog->>NativeApi: nativeApi.Recognize(image)
-    NativeApi->>OpenALPR: alpr_recognize_json(engine, image, length)
-    OpenALPR-->>NativeApi: JSON string (alpr_create result)
+    NativeApi->>OpenALPR: alpr_recognize_json(engine, imagePointer, length)
+    OpenALPR-->>NativeApi: UTF-8 JSON string pointer
+    NativeApi->>OpenALPR: alpr_free_string(jsonPointer)
     NativeApi-->>Recog: NativeRecognitionResult
     Recog-->>Client: PlateRecognitionResult
     
     Note over Client,OpenALPR: 3. Cleanup
-    Client->>Recog: using/dispose()
+    Client->>Recog: recognizer.Dispose()
     Recog->>NativeApi: nativeApi.Dispose()
     NativeApi->>OpenALPR: alpr_destroy(engine)
 ```
@@ -90,6 +107,8 @@ sequenceDiagram
 
 ### 1. P/Invoke Bridge Pattern
 
+The native bridge pattern isolates platform-specific C calls behind internal P/Invoke declarations:
+
 ```csharp
 internal sealed class NativeOpenAlprApi : IOpenAlprNativeApi
 {
@@ -97,49 +116,64 @@ internal sealed class NativeOpenAlprApi : IOpenAlprNativeApi
     private readonly IntPtr handle;
     private bool disposed;
 
-    public void Recognize(ReadOnlyMemory<byte> image)
+    public unsafe NativeRecognitionResult Recognize(ReadOnlyMemory<byte> image)
     {
-        // P/Invoke to native C API
-        [DllImport(LibraryName, EntryPoint = "alpr_recognize_json")]
+        using var pin = image.Pin();
+        var jsonPointer = Native.Recognize(handle, (IntPtr)pin.Pointer, (nuint)image.Length);
+        // ... parse JSON response and free string ...
+    }
+
+    private static class Native
+    {
+        [DllImport(LibraryName, EntryPoint = "alpr_recognize_json", CallingConvention = CallingConvention.Cdecl)]
         internal static extern IntPtr Recognize(IntPtr engine, IntPtr image, nuint length);
+
+        [DllImport(LibraryName, EntryPoint = "alpr_free_string", CallingConvention = CallingConvention.Cdecl)]
+        internal static extern void FreeString(IntPtr value);
     }
 }
 ```
 
-**優點：**
-- ✅ 隔離 native 依賴於 managed 代碼
-- ✅ 支持跨平台二進位互換
-- ✅ 保留原始 API 行為
+**Key Benefits:**
+- ✅ Isolates native platform dependencies from managed consumer code
+- ✅ Supports cross-platform binary interop across Linux, Windows, and macOS
+- ✅ Preserves native C API performance without redundant object allocations
 
-### 2. Resource Deterministic Disposal
+### 2. Deterministic Resource Disposal
+
+Native memory allocations and C++ engine instances are managed using the `IDisposable` pattern:
 
 ```csharp
 public void Dispose()
 {
     if (disposed) return;
-    Native.Destroy(handle); // alpr_destroy(engine)
+    Native.Destroy(handle); // Invokes alpr_destroy(engine)
     disposed = true;
 }
 ```
 
-**資源管理：**
-- `alpr_create` → 返回 IntPtr handle
-- `alpr_recognize_json` → 返回 JSON string（需 FreeString）
-- `alpr_free_string` → 釋放 JSON 記憶體
-- `alpr_destroy` → 銷毀 engine
+**Resource Management Lifecycle:**
+- `alpr_create` → Returns an `IntPtr` handle to the allocated native C++ engine
+- `alpr_recognize_json` → Returns a heap-allocated UTF-8 JSON string pointer
+- `alpr_free_string` → Frees the native JSON string buffer within a `finally` block
+- `alpr_destroy` → Destroys the engine instance and deallocates native resources
 
 ### 3. Factory Pattern (Internal)
+
+Validation is performed before native engine allocation:
 
 ```csharp
 private static IOpenAlprNativeApi CreateNativeApi(OpenAlprOptions options)
 {
     ArgumentNullException.ThrowIfNull(options);
-    options.Validate(); // Path validation
+    options.Validate(); // Validates country code and file paths
     return new NativeOpenAlprApi(options);
 }
 ```
 
 ### 4. Dependency Injection (Internal Boundary)
+
+To ensure full unit testability without requiring compiled native binaries, `OpenAlprRecognizer` provides an internal constructor accepting `IOpenAlprNativeApi`:
 
 ```csharp
 internal OpenAlprRecognizer(OpenAlprOptions options, IOpenAlprNativeApi nativeApi)
@@ -151,31 +185,31 @@ internal OpenAlprRecognizer(OpenAlprOptions options, IOpenAlprNativeApi nativeAp
 }
 ```
 
-**Testability：**
-- Mock IOpenAlprNativeApi 可注入測試中
-- FakeNativeApi 用於單元測試（見 Tests）
+**Testability:**
+- Mock implementations of `IOpenAlprNativeApi` can be injected during testing
+- `FakeNativeApi` verifies managed parsing and error handling in CI pipelines without native dependencies
 
 ## 📦 Data Flow Diagram
 
 ```mermaid
 flowchart TD
-    A[Application Code] -->|new OpenAlprRecognizer(options)| B(OpenAlprRecognizer)
-    B -->|Create Native API| C[NativeOpenAlprApi]
+    A["Application Code"] -->|"new OpenAlprRecognizer(options)"| B["OpenAlprRecognizer"]
+    B -->|"Instantiate Native Bridge"| C["NativeOpenAlprApi"]
     
-    C -->|P/Invoke: alpr_create| D[Native Library .so/.dll]
-    D -->|Returns IntPtr handle| C
+    C -->|"P/Invoke: alpr_create(...)"| D["Native Library (.so / .dll / .dylib)"]
+    D -->|"Returns engine handle (IntPtr)"| C
     
-    A -->|recognize(imageBytes)| B
-    B -->|Call Recognize()| C
-    C -->|P/Invoke: alpr_recognize_json| D
-    D -->|Returns JSON string| C
+    A -->|"recognizer.Recognize(image)"| B
+    B -->|"nativeApi.Recognize(image)"| C
+    C -->|"P/Invoke: alpr_recognize_json(...)"| D
+    D -->|"Returns JSON string pointer"| C
     
-    C -->|Parse JSON| E[Managed Result Objects]
-    E -->|PlateRecognitionResult| A
+    C -->|"Parse JSON & Map Models"| E["PlateRecognitionResult"]
+    E -->|"Return Result"| A
     
-    A -->|Dispose/recogizer| B
-    B -->|Destroy Engine| C
-    C -->|alpr_destroy| D
+    A -->|"recognizer.Dispose()"| B
+    B -->|"nativeApi.Dispose()"| C
+    C -->|"P/Invoke: alpr_destroy(engine)"| D
 ```
 
 ## 🔒 Error Handling Strategy
@@ -185,32 +219,35 @@ flowchart TD
 ```csharp
 public sealed class OpenAlprException : Exception
 {
-    // Wraps native-level exceptions with context
+    // Wraps native-level errors and initialization failures with rich context
     public OpenAlprException(string message, Exception? innerException = null);
 }
 ```
 
 **Error Categories:**
 
-| 類別 | 例外類型 | 處理方式 |
-|------|----------|----------|
-| Initialization Failed | `OpenAlprException` (handle == IntPtr.Zero) | Native library not found or runtime data missing |
-| Missing Library | `DllNotFoundException` → Wrapped as `OpenAlprException` | Platform-specific .so/.dll not installed |
-| Missing Export | `EntryPointNotFoundException` → Wrapped as `OpenAlprException` | Expected C API symbols not exported |
-| Empty Image | `ArgumentException` | Image data is empty |
-| Recognition Failed | `OpenAlprException` (handle == IntPtr.Zero) | No plate detected or invalid image |
-| JSON Parse Error | `OpenAlprException` | Truncated/malformed JSON response |
+| Category | Exception Type | Handling Strategy |
+|----------|----------------|-------------------|
+| Initialization Failed | `OpenAlprException` (`handle == IntPtr.Zero`) | Native library missing or runtime data path invalid |
+| Missing Library | `DllNotFoundException` | Platform-specific `.so`, `.dll`, or `.dylib` not installed |
+| Missing Export | `EntryPointNotFoundException` | Required C ABI symbols not exported from library |
+| Empty Image | `ArgumentException` | Image data empty or zero length |
+| Recognition Failed | `OpenAlprException` | Native API returned null result |
+| JSON Parse Error | `OpenAlprException` (wrapped `JsonException`) | Truncated or malformed JSON payload from native bridge |
 
-### Null Reference Prevention
+### Null Reference & Fail-Early Prevention
 
 ```csharp
 public NativeOpenAlprApi(OpenAlprOptions options)
 {
-    ArgumentNullException.ThrowIfNull(options); // Early failure
-    handle = Native.Create(...);
+    ArgumentNullException.ThrowIfNull(options);
+
+    this.country = options.Country;
+    handle = Native.Create(this.country, options.ConfigurationFile ?? string.Empty,
+        options.RuntimeDirectory ?? string.Empty, this.topN = options.TopN, options.DetectRegion ? 1 : 0);
     
     if (handle == IntPtr.Zero)
-        throw new OpenAlprException("Failed to initialize...", null);
+        throw new OpenAlprException($"Failed to initialize OpenALPR engine for country '{options.Country}' with TopN={options.TopN}. Ensure native runtime data files are installed.", null);
 }
 ```
 
@@ -225,19 +262,19 @@ namespace OpenAlprWrapper.Tests
     {
         [Fact]
         public void Constructor_NullOptions_ThrowsArgumentNullException()
-            // Validates argument checking
+            // Validates argument preconditions
         
         [Fact]
         public void Recognize_EmptyResults_ReturnsEmptyPlates()
-            // Validates edge case: no plates detected
+            // Validates edge case where no plates are detected
         
         [Fact]
         public void Recognize_MultiplePlates_ReturnsCorrectStructure()
-            // Validates multi-plate recognition
+            // Validates parsing multiple plates and candidates
         
         [Fact]
         public void StressTest_MultipleRecognizeDisposeCycles_DoesNotLeak()
-            // 100+ cycles to verify no resource leaks
+            // Validates stability over 100+ cycles
     }
 }
 ```
@@ -255,10 +292,10 @@ private sealed class FakeNativeApi : IOpenAlprNativeApi
 }
 ```
 
-**優點：**
-- ✅ Isolated unit testing without native dependency
-- ✅ Verify managed layer logic independently
-- ✅ Test error scenarios without platform-specific binaries
+**Key Benefits:**
+- ✅ Isolated unit testing without requiring native runtime dependencies
+- ✅ Independent verification of managed business logic and error propagation
+- ✅ Reliable test execution on CI runners lacking native OpenCV/OpenALPR installations
 
 ## 🔧 Build & Deployment Architecture
 
@@ -266,14 +303,18 @@ private sealed class FakeNativeApi : IOpenAlprNativeApi
 
 ```
 OpenAlprWrapper.0.1.0.nupkg/
-├── lib/net10.0/
-│   ├── OpenAlprWrapper.dll      (Managed assembly)
-│   └── OpenAlprWrapper.xml      (XML documentation)
-├── [Content_Types].xml          (Package manifest)
-└── README.md                    (Installation guide)
+├── lib/
+│   ├── net10.0/
+│   │   ├── OpenAlprWrapper.dll      (Managed assembly)
+│   │   └── OpenAlprWrapper.xml      (XML documentation)
+│   └── net8.0/
+│       ├── OpenAlprWrapper.dll
+│       └── OpenAlprWrapper.xml
+├── [Content_Types].xml              (Package manifest)
+└── README.md                        (Package readme)
 
 OpenAlprWrapper.0.1.0.snupkg/
-└── symbols                      (PDB files for debugging)
+└── symbols                          (PDB symbol files for source debugging)
 ```
 
 ### Native Assets Configuration
@@ -297,44 +338,48 @@ OpenAlprWrapper.0.1.0.snupkg/
 }
 ```
 
-**CI/CD Integration：**
-- Use GitHub Actions or Azure DevOps for cross-platform native builds
-- Bundle pre-compiled binaries as NuGet assets (optional, advanced)
-- Or require users to install OpenALPR separately
+**CI/CD Integration:**
+- Use automated build runners for cross-platform native compilation
+- Package platform-specific native binaries into target distribution packages
+- Provide fallback paths to system-installed OpenALPR dynamic libraries
 
 ## 📊 Performance Considerations
 
 ### Memory Management
 
-| 操作 | 記憶體影響 | 最佳化措施 |
-|------|-----------|------------|
-| P/Invoke call | Minimal (IntPtr marshalling) | Using var pin for image bytes |
-| JSON parsing | Medium (JsonDocument.Parse) | FreeString() in finally block |
-| Result objects | Low (record structs) | Single-pass materialization |
+| Operation | Memory Impact | Optimization Strategy |
+|-----------|---------------|-----------------------|
+| P/Invoke call | Minimal (`IntPtr` pinning) | `ReadOnlyMemory<byte>.Pin()` avoids heap copy |
+| JSON parsing | Medium (`JsonDocument.Parse`) | Deterministic `FreeString()` in `finally` block |
+| Result objects | Low (record types) | Single-pass materialization into immutable lists |
 
 ### Recommended Usage Patterns
 
 ```csharp
-// ✅ GOOD: Use 'using' statement for automatic disposal
+// ✅ RECOMMENDED: Reuse recognizer instance across multiple images
+var options = new OpenAlprOptions { Country = "us", TopN = 10 };
 using var recognizer = new OpenAlprRecognizer(options);
 
-// ✅ GOOD: Reuse recognizer if configuration unchanged
-var recognizerFactory = () => new OpenAlprRecognizer(options);
-
-// ⚠️ AVOID: Create new recognizer per image (suboptimal)
 foreach (var image in images)
 {
-    var recognizer = new OpenAlprRecognizer(options); // Inefficient
+    var result = recognizer.Recognize(image);
+}
+
+// ⚠️ AVOID: Creating a new recognizer per image (incurs engine initialization overhead)
+foreach (var image in images)
+{
+    using var recognizer = new OpenAlprRecognizer(options); // Inefficient
+    recognizer.Recognize(image);
 }
 ```
 
 ### Processing Time Expectations
 
-| 圖片尺寸 | 預期處理時間 | Notes |
-|----------|--------------|-------|
-| 640×480 | ~10-20ms | Low-resolution images |
-| 1280×720 | ~20-50ms | HD quality |
-| 1920×1080+ | ~30-100ms | FHD and above |
+| Image Resolution | Expected Processing Time | Notes |
+|------------------|--------------------------|-------|
+| 640×480 | ~10–20 ms | Standard recognition resolution |
+| 1280×720 | ~20–50 ms | High Definition (720p) |
+| 1920×1080+ | ~30–100 ms | Full HD (1080p) and above |
 
 ---
 

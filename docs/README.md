@@ -1,20 +1,20 @@
 # OpenALPRWrapper Documentation
 
-技術文檔目錄 - [OpenALPR](https://www.openalpr.com/) .NET Wrapper 完整參考指南
+Technical Documentation Index — Complete reference guide for the [OpenALPR](https://www.openalpr.com/) .NET wrapper.
 
-## 📚 文檔索引
+## 📚 Documentation Index
 
-| 文件 | 說明 |
-|------|------|
-| **[API Reference](api/README.md)** | API 介面詳解、範例程式碼、屬性說明 |
-| **[Installation Guide](installation.md)** | 詳細安裝步驟、環境要求、Runtime 配置 |
-| **[Architecture](architecture.md)** | 架構設計、層級結構、依賴注入模式 |
-| **[Troubleshooting](troubleshooting.md)** | 常見問題排除、錯誤訊息解析、診斷技巧 |
-| **[Contributing](CONTRIBUTING.md)** | 專案貢獻規範、程式碼風格、測試要求 |
+| Document | Description |
+|----------|-------------|
+| **[API Reference](api/README.md)** | Detailed API interfaces, code examples, and model specifications |
+| **[Installation Guide](installation.md)** | Step-by-step installation instructions, environment prerequisites, and runtime setup |
+| **[Architecture](architecture.md)** | Architectural design, system layering, and dependency inversion patterns |
+| **[Troubleshooting](troubleshooting.md)** | Common issue troubleshooting, error message explanations, and diagnostic techniques |
+| **[Contributing](CONTRIBUTING.md)** | Project contribution guidelines, code style standards, and testing requirements |
 
 ## 🎯 API Reference
 
-### IPlateRecognizer 介面
+### IPlateRecognizer Interface
 
 ```csharp
 public interface IPlateRecognizer : IDisposable
@@ -28,20 +28,44 @@ public interface IPlateRecognizer : IDisposable
     /// <exception cref="ObjectDisposedException">The recognizer has been disposed.</exception>
     /// <exception cref="OpenAlprException">OpenALPR failed to recognize the image.</exception>
     PlateRecognitionResult Recognize(ReadOnlyMemory<byte> image);
+
+    /// <summary>
+    /// Recognizes license plates across a batch of encoded images.
+    /// </summary>
+    BatchRecognitionResult RecognizeBatch(IEnumerable<ReadOnlyMemory<byte>> images);
+
+    /// <summary>
+    /// Asynchronously recognizes license plates in encoded image data.
+    /// </summary>
+    Task<PlateRecognitionResult> RecognizeAsync(ReadOnlyMemory<byte> image, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Asynchronously recognizes license plates across a batch of encoded images.
+    /// </summary>
+    Task<BatchRecognitionResult> RecognizeBatchAsync(IEnumerable<ReadOnlyMemory<byte>> images, CancellationToken cancellationToken = default);
+
+    /// <summary>Occurs when progress is made during batch recognition.</summary>
+    event EventHandler<PlateRecognitionEventArgs>? RecognitionProgress;
+
+    /// <summary>Occurs when an error is encountered during batch recognition.</summary>
+    event EventHandler<PlateErrorEventArgs>? RecognitionError;
+
+    /// <summary>Occurs when batch recognition has completed.</summary>
+    event EventHandler<PlateCompletedEventArgs>? Completed;
 }
 ```
 
-### OpenAlprOptions 配置選項
+### OpenAlprOptions Configuration
 
-| 屬性 | 類型 | 預設值 | 說明 |
-|------|------|--------|------|
-| `Country` | `string` | `"us"` | OpenALPR 國家代碼（如 us, uk, eu） |
-| `ConfigurationFile` | `string?` | `null` | 自定義配置文件路徑 |
-| `RuntimeDirectory` | `string?` | `null` | 自定義 Runtime Data 目錄 |
-| `TopN` | `int` | `10` | 返回候選結果數目 |
-| `DetectRegion` | `bool` | `false` | 實驗性區域檢測開關 |
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `Country` | `string` | `"us"` | OpenALPR country code (e.g., `us`, `uk`, `eu`) |
+| `ConfigurationFile` | `string?` | `null` | Optional path to custom OpenALPR configuration file |
+| `RuntimeDirectory` | `string?` | `null` | Optional path to custom OpenALPR runtime data directory |
+| `TopN` | `int` | `10` | Maximum number of candidate plate readings to return |
+| `DetectRegion` | `bool` | `false` | Experimental region detection flag |
 
-### OpenAlprException 例外類型
+### OpenAlprException Exception Type
 
 ```csharp
 public sealed class OpenAlprException : Exception
@@ -52,16 +76,16 @@ public sealed class OpenAlprException : Exception
 }
 ```
 
-常見錯誤訊息：
+Common Error Messages:
 
-| 錯誤訊息 | 原因 | 解決方案 |
-|----------|------|----------|
-| "Failed to initialize OpenALPR engine..." | Native library 未安裝或 Runtime Data 缺失 | 安裝 OpenALPR native library 並配置 runtime 路徑 |
-| "DllNotFoundException" | Platform-specific .so/.dll 找不到 | 確認平台對應的二進位檔案存在 |
-| "OpenALPR returned no recognition result." | Image 中無有效车牌 | 檢查圖片明暗、模糊度、是否包含合法车牌 |
+| Error Message | Cause | Resolution |
+|---------------|-------|------------|
+| "Failed to initialize OpenALPR engine..." | Native library not found or runtime data files missing | Install the OpenALPR native library and verify the runtime data directory path |
+| "DllNotFoundException" | Platform-specific native binary (`.so`, `.dll`, or `.dylib`) not found | Verify the platform-specific native binary exists in the library path |
+| "Recognition failed for country=..." | No plate detected or native API returned a null pointer | Verify image exposure, focus/blurriness, resolution, and plate visibility |
 
 ---
 
-**版本：** 0.1.0  
-**授權：** AGPL-3.0-only  
-**最後更新：** 2026-11-12
+**Version:** 0.1.0
+**License:** AGPL-3.0-only
+**Last Updated:** 2026-11-12

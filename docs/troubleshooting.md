@@ -1,17 +1,17 @@
 # Troubleshooting Guide
 
-常見問題與解決方法完整指南
+Comprehensive guide to diagnosing and resolving common issues with OpenALPRWrapper.
 
-## 🔍 錯誤訊息快速參考
+## 🔍 Quick Error Reference
 
-| 錯誤訊息 | 可能原因 | 解決方案 |
-|----------|----------|----------|
-| "Failed to initialize OpenALPR engine..." | Runtime Data files missing | 安裝 OpenALPR runtime data (見 Installation) |
-| "DllNotFoundException" / "openalpr.so not found" | Native library not installed | 下載並安裝對應平台的 native binary |
-| "EntryPointNotFoundException" | Expected C API exports not found | 使用正確的 OpenALPR build，驗證 exported symbols |
-| "DirectoryNotFoundException" | Runtime directory doesn't exist | 檢查路径是否存在或使用絕對路徑 |
-| "FileNotFoundException" (ConfigurationFile) | Custom config file missing | 提供存在的路徑或省略此選項 |
-| "OpenALPR returned no recognition result." | No plate in image or invalid data | 檢查圖片明暗、模糊度、是否包含合法车牌 |
+| Error Message | Possible Cause | Resolution |
+|---------------|----------------|------------|
+| "Failed to initialize OpenALPR engine..." | Runtime data files missing or invalid path | Install OpenALPR runtime data files (see [Installation Guide](installation.md)) |
+| "DllNotFoundException" / "openalpr.so not found" | Native library not installed or not in library path | Download and install native binary for target platform |
+| "EntryPointNotFoundException" | Expected C ABI exports not found in library | Use correct OpenALPR bridge build and verify exported symbols |
+| "DirectoryNotFoundException" | Runtime directory path does not exist | Verify directory exists or use absolute path |
+| "FileNotFoundException" (ConfigurationFile) | Custom configuration file missing | Verify file exists or omit configuration file path |
+| "Recognition failed for country=..." | No plate in image or unsupported format | Check image brightness, contrast, blurriness, and orientation |
 
 ---
 
@@ -19,11 +19,11 @@
 
 ### ❌ Error: "Failed to initialize OpenALPR engine for country 'us'..."
 
-**原因：** Native library failed to load due to missing runtime files.
+**Cause:** The native library failed to initialize the OpenALPR engine, typically because the runtime data directory was missing, empty, or inaccessible.
 
-**解決方案步驟：**
+**Resolution Steps:**
 
-1. **檢查 Runtime Directory 存在性：**
+1. **Verify Runtime Directory Existence:**
    ```bash
    # Linux/macOS
    ls -la /path/to/openalpr/runtime/
@@ -32,33 +32,33 @@
    Get-ChildItem C:\OpenALPR\runtime\
    ```
 
-2. **如果目錄為空或不存在，下載 Runtime Data：**
+2. **If the directory is empty or missing, download and extract Runtime Data:**
    ```bash
    curl -L https://github.com/OpenALPR/openalpr/releases/download/vX.X.X/openalpr_runtime_X.X.X.tar.gz | \
      tar -xzf - -C /path/to/openalpr/runtime/
    ```
 
-3. **驗證文件已正確安裝：**
+3. **Verify files are installed properly:**
    ```bash
    ls -la runtime/*.dat  # Should list .dat files
    ls -la runtime/*.xml  # Should list XML files
    ```
 
-### ❌ Error: "DllNotFoundException: openalpr_dotnet" (Windows/macOS)
+### ❌ Error: "DllNotFoundException: openalpr_dotnet" (Windows/macOS) or "libopenalpr.so" (Linux)
 
-**原因：** Platform-specific native library (.dll or .so) not installed.
+**Cause:** Platform-specific native library (`.dll`, `.so`, or `.dylib`) could not be located by the dynamic linker.
 
-**解決方案（按平台）：**
+**Resolution (by platform):**
 
 #### Windows:
 
 ```powershell
-# Method 1: Download from GitHub Releases
-curl -L https://github.com/OpenALPR/openalpr/releases/download/vX.X.X/openalpr_windows_x64.zip \
+# Method 1: Download from GitHub Releases and extract to application folder or PATH
+curl -L https://github.com/OpenALPR/openalpr/releases/download/vX.X.X/openalpr_windows_x64.zip `
      | Expand-Archive -DestinationPath C:\OpenALPR -Force
 
-# Method 2: Copy to GAC (Global Assembly Cache)
-Copy-Item "C:\OpenALPR\openalpr_dotnet.dll" [System.Runtime.InteropServices.MSBuildCoreAssembly]
+# Add to system PATH if not copying to the application directory
+$env:PATH += ";C:\OpenALPR"
 ```
 
 #### Linux:
@@ -80,33 +80,34 @@ ldconfig -p | grep libopenalpr
 ```bash
 tar -xzf openalpr_osx_universal.zip
 cp -R openalpr/* /usr/local/lib/openalpr/
+export DYLD_LIBRARY_PATH=/usr/local/lib/openalpr:$DYLD_LIBRARY_PATH
 ```
 
-**驗證安裝：**
+**Verify Installation:**
 ```bash
 # Linux
 ldconfig -p | grep openalpr
-# Should show: libopenalpr.so.X -> /usr/lib/openalpr.so.X
+# Should display: libopenalpr.so.X -> /usr/lib/openalpr.so.X
 
 # macOS
 ls -la /usr/local/lib/openalpr/*.dylib
-# Should show .dylib files
+# Should list .dylib files
 
 # Windows (PowerShell)
-Get-Module openalpr_dotnet | Select-Object Name, Path
+Get-Command openalpr_dotnet.dll -ErrorAction SilentlyContinue
 ```
 
 ---
 
 ## 🔍 Error Category: API Usage Errors
 
-### ❌ Error: "OpenALPR returned no recognition result."
+### ❌ Error: "Recognition failed for country='us' with TopN=10. No plate detected or native API returned null result."
 
-**原因：** Image does not contain a valid license plate.
+**Cause:** The image does not contain a recognizable license plate, the license plate is obscured or poorly lit, or the image format is incompatible.
 
-**調試步驟：**
+**Debugging Steps:**
 
-1. **檢查圖片內容：**
+1. **Inspect Image Content and Properties:**
    ```csharp
    var result = recognizer.Recognize(imageBytes);
    Console.WriteLine($"Image size: {result.ImageWidth}x{result.ImageHeight}");
@@ -114,18 +115,17 @@ Get-Module openalpr_dotnet | Select-Object Name, Path
    
    if (result.Plates.Count == 0)
    {
-       // Try with different image or adjust parameters
        Console.WriteLine("No plates detected. Possible causes:");
        Console.WriteLine("- Image may not contain a license plate");
-       Console.WriteLine("- License plate may be too dark/blurry/angled");
-       Console.WriteLine("- Country code may not match the plate style");
+       Console.WriteLine("- License plate may be too dark, blurry, or angled");
+       Console.WriteLine("- Configured country code does not match the plate format");
    }
    ```
 
-2. **使用測試圖片驗證：**
+2. **Verify with a Known Test Image:**
    ```csharp
-   // Test with known good image
-   var testData = File.ReadAllBytes("samples/images/test.jpg");
+   // Test with known working image from sample repository
+   var testData = File.ReadAllBytes("samples/images/google-thumbnail-1.jpg");
    var testResult = recognizer.Recognize(testData);
    
    Console.WriteLine($"Test result: {testResult.Plates.Count} plates found");
@@ -135,17 +135,20 @@ Get-Module openalpr_dotnet | Select-Object Name, Path
 
 ### ❌ Error: "ArgumentException: Encoded image data must not be empty."
 
-**原因：** Passed empty or null image bytes.
+**Cause:** Empty or zero-byte array passed to `Recognize()`.
 
-**解決方案：**
+**Resolution:**
 
 ```csharp
-// ✅ Correct usage
-byte[] imageData = File.ReadAllBytes("image.jpg");  // Not empty
-var result = recognizer.Recognize(imageData);
+// ✅ Correct usage: Ensure byte array contains valid image data
+byte[] imageData = File.ReadAllBytes("image.jpg");
+if (imageData.Length > 0)
+{
+    var result = recognizer.Recognize(imageData);
+}
 
-// ❌ Incorrect - avoid this
-var result = recognizer.Recognize(new byte[0]);  // Throws!
+// ❌ Incorrect: Passing empty buffer throws ArgumentException
+var result = recognizer.Recognize(Array.Empty<byte>());
 ```
 
 ---
@@ -154,12 +157,12 @@ var result = recognizer.Recognize(new byte[0]);  // Throws!
 
 ### ❌ Error: "DirectoryNotFoundException: Runtime directory does not exist"
 
-**原因：** Specified runtime directory path doesn't exist.
+**Cause:** The path provided in `OpenAlprOptions.RuntimeDirectory` does not exist on disk.
 
-**解決方案：**
+**Resolution:**
 
 ```csharp
-// ✅ Use absolute path and verify it exists first
+// ✅ Use absolute path and verify existence before initializing
 var runtimePath = Path.GetFullPath("/usr/local/lib/openalpr/runtime");
 if (!Directory.Exists(runtimePath))
 {
@@ -177,20 +180,20 @@ using var recognizer = new OpenAlprRecognizer(options);
 
 ### ❌ Error: "FileNotFoundException: Configuration file does not exist"
 
-**原因：** Custom configuration file path is invalid.
+**Cause:** The path provided in `OpenAlprOptions.ConfigurationFile` does not point to an existing file.
 
-**解決方案：**
+**Resolution:**
 
-**Option 1: Use default configuration (recommended for most cases)**
+**Option 1: Use default configuration (recommended for standard setups)**
 ```csharp
 var options = new OpenAlprOptions 
 { 
-    Country = "us",
-    // Don't specify ConfigurationFile to use default
+    Country = "us"
+    // Leave ConfigurationFile null to use built-in defaults
 };
 ```
 
-**Option 2: Provide valid path to custom config**
+**Option 2: Provide valid path to custom configuration**
 ```csharp
 string configFile = "/path/to/custom_config.ini";
 if (File.Exists(configFile))
@@ -204,7 +207,7 @@ if (File.Exists(configFile))
 }
 else
 {
-    throw new FileNotFoundException($"Configuration file not found: {configFile}", nameof(ConfigurationFile));
+    throw new FileNotFoundException($"Configuration file not found: {configFile}", nameof(configFile));
 }
 ```
 
@@ -214,49 +217,50 @@ else
 
 ### ❌ Warning/Issue: "High memory usage during batch processing"
 
-**原因：** Creating recognizer per image causes unnecessary allocations.
+**Cause:** Instantiating a new `OpenAlprRecognizer` per image causes repeated engine allocations and overhead.
 
-**解決方案：**
+**Resolution:**
 
 ```csharp
-// ✅ RECOMMENDED: Create once, reuse multiple times
+// ✅ RECOMMENDED: Use RecognizeBatch for multi-image processing
 var options = new OpenAlprOptions { Country = "us", TopN = 10 };
 using var recognizer = new OpenAlprRecognizer(options);
 
+var batchResult = recognizer.RecognizeBatch(imageDataList);
+
+// Or reuse a single recognizer instance across sequential calls
 foreach (var imageData in imageDataList)
 {
     var result = recognizer.Recognize(imageData);
 }
 
-// Or use 'using' pattern for automatic disposal
+// ⚠️ AVOID: Creating a new recognizer instance per image
 foreach (var imageData in imageDataList)
 {
-    using var recognizer = new OpenAlprRecognizer(options);
+    using var recognizer = new OpenAlprRecognizer(options); // Inefficient: repeatedly reinitializes native engine
     var result = recognizer.Recognize(imageData);
 }
 ```
 
 ### ❌ Issue: "Slow recognition performance"
 
-**原因：** Image resolution too high or many concurrent requests.
+**Cause:** High image resolution (e.g., 4K images) or single-threaded synchronous processing of large batches.
 
-**解決方案：**
+**Resolution:**
 
-1. **Resize images before processing (optional):**
+1. **Resize images to standard recognition resolution (~640x480 to 1280x720):**
    ```csharp
-   // Resize to optimal size (~640x480) before recognition
+   // Resize high-resolution images before recognition
    var resized = ResizeImage(inputImage, targetWidth: 640, targetHeight: 480);
    var result = recognizer.Recognize(resized);
    ```
 
-2. **Reuse same recognizer instance:**
+2. **Reuse recognizer instance and leverage async methods:**
    ```csharp
-   // ✅ Better performance
    using var recognizer = new OpenAlprRecognizer(options);
    
-   // Reuse across multiple images
-   foreach (var image in images)
-       ProcessImage(recognizer.Recognize(image));
+   // Async batch recognition
+   var batchResult = await recognizer.RecognizeBatchAsync(images, cancellationToken);
    ```
 
 ---
@@ -265,31 +269,31 @@ foreach (var imageData in imageDataList)
 
 ### Linux: "libopenalpr.so.X: cannot open shared object file"
 
-**解決方案：**
+**Resolution:**
 
 ```bash
-# Find where .so file is located
+# Locate where the .so file is installed
 find /usr -name "libopenalpr*" 2>/dev/null
 
-# Add to LD_LIBRARY_PATH
+# Add directory to LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=/usr/lib:$LD_LIBRARY_PATH
 
-# Or symlink to standard location
-sudo ln -s /path/to/libopenalpr.so.* /usr/lib/x86_64-linux-gnu/libopenalpr.so
+# Or symlink to standard system library directory
+sudo ln -s /usr/local/lib/libopenalpr.so /usr/lib/x86_64-linux-gnu/libopenalpr.so
 ```
 
-### Windows: ".NET Core vs .NET Framework compatibility"
+### Windows: Target Framework Compatibility
 
-**解決方案：**
+**Resolution:**
 
 ```powershell
-# Ensure you're using .NET Core 3.1+ or .NET 5+
+# Ensure you are running on supported .NET runtime (.NET 8.0 or .NET 10.0)
 dotnet --list-runtimes
 
-# Project file must target modern framework
+# In your project file:
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework> <!-- or net8.0, net9.0, etc. -->
+    <TargetFramework>net10.0</TargetFramework> <!-- or net8.0 -->
   </PropertyGroup>
 </Project>
 ```
@@ -298,10 +302,9 @@ dotnet --list-runtimes
 
 ## 🧪 Debug Mode: Enable Verbose Logging
 
-To see more detailed error information during development:
+To inspect detailed error information and inner exceptions:
 
 ```csharp
-// Wrap in try-catch to see full exception chain
 try 
 {
     var recognizer = new OpenAlprRecognizer(options);
@@ -309,10 +312,10 @@ try
 }
 catch (Exception ex)
 {
-    Console.WriteLine($"=== Exception Chain ===");
+    Console.WriteLine("=== Exception Chain ===");
     Console.WriteLine($"Outer: {ex.GetType().Name}: {ex.Message}");
     
-    // Print inner exceptions
+    // Print all inner exceptions
     var current = ex;
     int depth = 0;
     while (current.InnerException != null && depth < 5)
@@ -330,26 +333,26 @@ catch (Exception ex)
 
 ## 📊 Diagnostic Checklist
 
-Before reporting an issue, verify:
+Before opening an issue, verify:
 
-- [ ] Native library is installed for your platform
-- [ ] Runtime data files are extracted to correct directory
-- [ ] Configuration paths (RuntimeDirectory) point to valid directories
-- [ ] Image being processed contains a valid license plate
-- [ ] Using absolute paths (not relative)
-- [ ] Running on compatible .NET version (.NET 10.0+)
+- [ ] OpenALPR native library is compiled and installed for your platform architecture
+- [ ] Runtime data files are extracted into the target runtime directory
+- [ ] `RuntimeDirectory` and `ConfigurationFile` paths are valid absolute paths
+- [ ] Images contain visible, unoccluded license plates
+- [ ] Country code parameter (`Country`) matches the plate standard (e.g., `us`, `eu`, `uk`)
+- [ ] Application runs on a supported .NET version (.NET 10.0 or .NET 8.0)
 
 ---
 
 ## 📞 Getting Help
 
-如果上述解決方案無效，請提供以下資訊：
+If the troubleshooting steps above do not resolve your issue, please submit an issue with:
 
-1. **平台與版本：** Linux/Windows/macOS, .NET version
-2. **OpenALPR 版本：** 檢查 GitHub releases
-3. **完整錯誤訊息：** 包含 inner exception 訊息
-4. **配置參數：** `OpenAlprOptions` 的設定值
-5. **圖片樣本：** (if applicable) Test image for debugging
+1. **Platform and Environment:** OS (Linux/Windows/macOS), architecture (x64/arm64), .NET version
+2. **OpenALPR Version:** Native library version and build source
+3. **Full Error Details:** Complete exception messages, inner exceptions, and stack traces
+4. **Configuration Options:** Configured `OpenAlprOptions` values
+5. **Sample Image:** (If applicable) Sample image that triggers the failure
 
 ---
 
