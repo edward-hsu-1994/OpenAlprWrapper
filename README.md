@@ -1,5 +1,7 @@
 # OpenAlprWrapper
 
+[繁體中文](README-ZH.md)
+
 AGPL-3.0 .NET wrapper for the [OpenALPR](https://www.openalpr.com/) license plate recognition library.
 
 ## 📋 Status
