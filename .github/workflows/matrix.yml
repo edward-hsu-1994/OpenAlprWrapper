@@ -1,0 +1,52 @@
+name: CI Matrix
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: ${{ matrix.os }} - .NET Core
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ matrix.dotnet-version || '10.0.x' }}
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore --verbosity minimal
+
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+      env:
+        # Skip integration tests that need native library
+        XUNIT_SKIP_OPENALPRWRAPPERTESTSINTEGRATIONTESTS__INTEGRATIONEMPTYIMAGERETURNSEMPYRESULTS: 'true'
+        XUNIT_SKIP_OPENALPRWRAPPERTESTSINTEGRATIONTESTS__INTEGRATIONBATCHWITHMULTIPLEIMAGESRETURNSCORRECTCOUNTS: 'true'
+
+    - name: Pack NuGet package
+      run: dotnet pack --configuration Release --output ./artifacts/packages
+
+    - name: Upload packages
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-packages-${{ matrix.os }}
+        path: artifacts/packages/*.nupkg
+        retention-days: 15
+
+    - name: Publish to NuGet.org (optional, requires API key)
+      run: |
+        echo "To publish to NuGet.org, add a NuGet push step with API key"
+        dotnet nuget push artifacts/packages/OpenAlprWrapper.*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }} || echo "NuGet API key not set, skipping publish"
