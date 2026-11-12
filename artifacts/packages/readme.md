@@ -110,5 +110,5 @@ This package is licensed under the AGPL-3.0 license. When distributing OpenALPR 
 ## Support
 
 - [OpenALPR Official Website](https://www.openalpr.com/)
-- [GitHub Repository](https://github.com/OpenALPRWrapper/OpenALPRWrapper)
+- [GitHub Repository](https://github.com/edward-hsu-1994/OpenAlprWrapper)
 - [Installation Guide](../../docs/installation.md)

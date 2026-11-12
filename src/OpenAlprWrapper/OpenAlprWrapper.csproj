@@ -17,9 +17,9 @@
     <Authors>OpenALPRWrapper contributors</Authors>
     <Description>.NET wrapper for OpenALPR license plate recognition. Provides P/Invoke bindings to the native OpenALPR C API.</Description>
     <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
-    <PackageProjectUrl>https://github.com/OpenALPRWrapper/OpenALPRWrapper</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/edward-hsu-1994/OpenAlprWrapper</PackageProjectUrl>
     <PackageTags>OpenALPR;license-plate-recognition;computer-vision;pinvoke;native</PackageTags>
-    <RepositoryUrl>https://github.com/OpenALPRWrapper/OpenALPRWrapper.git</RepositoryUrl>
+    <RepositoryUrl>https://github.com/edward-hsu-1994/OpenAlprWrapper.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
