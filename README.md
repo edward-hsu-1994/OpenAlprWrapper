@@ -1,6 +1,7 @@
 # OpenAlprWrapper
 
 [繁體中文](README-ZH.md)
+[![CI](https://github.com/edward-hsu-1994/OpenAlprWrapper/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/edward-hsu-1994/OpenAlprWrapper/actions/workflows/ci.yml) [![CI Matrix](https://github.com/edward-hsu-1994/OpenAlprWrapper/actions/workflows/matrix.yml/badge.svg?branch=main)](https://github.com/edward-hsu-1994/OpenAlprWrapper/actions/workflows/matrix.yml) [![NuGet Version](https://img.shields.io/nuget/v/OpenAlprWrapper.svg)](https://www.nuget.org/packages/OpenAlprWrapper/) [![NuGet Downloads](https://img.shields.io/nuget/dt/OpenAlprWrapper.svg)](https://www.nuget.org/packages/OpenAlprWrapper/) [![License](https://img.shields.io/github/license/edward-hsu-1994/OpenAlprWrapper.svg)](https://github.com/edward-hsu-1994/OpenAlprWrapper/blob/main/LICENSE)
 
 AGPL-3.0 .NET wrapper for the [OpenALPR](https://www.openalpr.com/) license plate recognition library.
 

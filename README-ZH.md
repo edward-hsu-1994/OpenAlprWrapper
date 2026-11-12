@@ -1,6 +1,7 @@
 # OpenAlprWrapper
 
 [English](README.md) | 繁體中文
+[![CI 狀態](https://github.com/edward-hsu-1994/OpenAlprWrapper/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/edward-hsu-1994/OpenAlprWrapper/actions/workflows/ci.yml) [![跨平台測試](https://github.com/edward-hsu-1994/OpenAlprWrapper/actions/workflows/matrix.yml/badge.svg?branch=main)](https://github.com/edward-hsu-1994/OpenAlprWrapper/actions/workflows/matrix.yml) [![NuGet 版本](https://img.shields.io/nuget/v/OpenAlprWrapper.svg)](https://www.nuget.org/packages/OpenAlprWrapper/) [![NuGet 下載量](https://img.shields.io/nuget/dt/OpenAlprWrapper.svg)](https://www.nuget.org/packages/OpenAlprWrapper/) [![授權](https://img.shields.io/github/license/edward-hsu-1994/OpenAlprWrapper.svg)](https://github.com/edward-hsu-1994/OpenAlprWrapper/blob/main/LICENSE)
 
 OpenAlprWrapper 是 OpenALPR 車牌辨識函式庫的 .NET 包裝程式，透過 P/Invoke 呼叫原生 OpenALPR C API，授權方式為 AGPL-3.0。
 
