@@ -125,7 +125,7 @@ Get-Command openalpr_dotnet.dll -ErrorAction SilentlyContinue
 2. **Verify with a Known Test Image:**
    ```csharp
    // Test with known working image from sample repository
-   var testData = File.ReadAllBytes("samples/images/google-thumbnail-1.jpg");
+   var testData = File.ReadAllBytes("samples/images/wikipedia-155-JVM.jpg");
    var testResult = recognizer.Recognize(testData);
    
    Console.WriteLine($"Test result: {testResult.Plates.Count} plates found");

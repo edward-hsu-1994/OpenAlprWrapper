@@ -215,7 +215,7 @@ try
     using var recognizer = new OpenAlprRecognizer(options);
     
     // Load a test image (e.g., from samples/images/)
-    var imageData = File.ReadAllBytes("samples/images/test.jpg");
+    var imageData = File.ReadAllBytes("samples/images/wikipedia-155-JVM.jpg");
     var result = recognizer.Recognize(imageData);
     
     Console.WriteLine("Processing complete!");

@@ -35,7 +35,7 @@ public sealed class IntegrationTests
     [Fact(Skip = "Requires OpenALPR native library.")]
     public void Integration_SinglePlateImage_DetectsCorrectly()
     {
-        var imagePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "samples", "images", "google-thumbnail-1.jpg");
+        var imagePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "samples", "images", "wikipedia-155-JVM.jpg");
         Assert.True(File.Exists(imagePath), $"Test image not found: {imagePath}");
         
         var imageBytes = File.ReadAllBytes(imagePath);
@@ -73,7 +73,7 @@ public sealed class IntegrationTests
     [Fact(Skip = "Requires OpenALPR native library.")]
     public void Integration_AsynchronousRecognition_CompletesSuccessfully()
     {
-        var imagePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "samples", "images", "google-thumbnail-1.jpg");
+        var imagePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "samples", "images", "wikipedia-155-JVM.jpg");
         if (!File.Exists(imagePath)) return;
         
         var imageBytes = File.ReadAllBytes(imagePath);
