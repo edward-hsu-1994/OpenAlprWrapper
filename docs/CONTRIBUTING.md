@@ -152,7 +152,7 @@ dotnet build OpenAlprWrapper.sln --configuration Release
 dotnet test --configuration Release
 
 # Build NuGet package
-make nuget PACKAGE_OUTPUT_DIR=./artifacts/packages
+make package PACKAGE_OUTPUT_DIR=./artifacts/packages
 ```
 
 ### Code Review Process

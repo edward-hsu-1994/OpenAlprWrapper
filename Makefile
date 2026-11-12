@@ -4,7 +4,7 @@ LIBRARY_PROJECT := src/OpenAlprWrapper/OpenAlprWrapper.csproj
 PACKAGE_OUTPUT_DIR ?= artifacts/packages
 NATIVE_BUILD_DIR ?= build/native
 
-.PHONY: build test nuget pack clean native-build
+.PHONY: build test package nuget pack clean native-build
 
 build:
 	dotnet build $(SOLUTION) --configuration $(CONFIGURATION)
@@ -12,10 +12,12 @@ build:
 test:
 	dotnet test $(SOLUTION) --configuration $(CONFIGURATION)
 
-nuget:
+package:
 	dotnet pack $(LIBRARY_PROJECT) --configuration $(CONFIGURATION) --output $(PACKAGE_OUTPUT_DIR)
 
-pack: nuget
+nuget: package
+
+pack: package
 
 clean:
 	dotnet clean $(SOLUTION) --configuration $(CONFIGURATION)

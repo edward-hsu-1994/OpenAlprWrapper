@@ -50,7 +50,7 @@ AGPL-3.0 .NET wrapper for the [OpenALPR](https://www.openalpr.com/) license plat
 
 ```bash
 make test           # Run unit tests
-make nuget          # Build NuGet package to artifacts/packages/
+make package        # Build NuGet package to artifacts/packages/
 make native-build   # Build native bridge (requires CMake + OpenALPR dev libraries)
 ```
 

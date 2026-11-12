@@ -96,7 +96,7 @@ Build the package from the repository root, then add it from the local package
 directory. Replace the example version with the version you built:
 
 ```bash
-make nuget PACKAGE_OUTPUT_DIR=./artifacts/packages
+make package PACKAGE_OUTPUT_DIR=./artifacts/packages
 dotnet add package OpenAlprWrapper --source ./artifacts/packages --version 0.1.0
 ```
 
