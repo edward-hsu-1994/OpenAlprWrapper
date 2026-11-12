@@ -33,10 +33,10 @@ jobs:
           echo "value=$version" >> "$GITHUB_OUTPUT"
 
       - name: Restore dependencies
-        run: dotnet restore src/OpenAlpr.Net/OpenAlprWrapper.csproj
+        run: dotnet restore src/OpenAlprWrapper/OpenAlprWrapper.csproj
 
       - name: Pack NuGet package
-        run: dotnet pack src/OpenAlpr.Net/OpenAlprWrapper.csproj --configuration Release --no-restore --output "${{ runner.temp }}/packages" -p:Version='${{ steps.version.outputs.value }}'
+        run: dotnet pack src/OpenAlprWrapper/OpenAlprWrapper.csproj --configuration Release --no-restore --output "${{ runner.temp }}/packages" -p:Version='${{ steps.version.outputs.value }}'
 
       - name: Upload NuGet packages
         uses: actions/upload-artifact@v4

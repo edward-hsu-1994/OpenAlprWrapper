@@ -207,7 +207,7 @@ Comprehensive documentation available in `docs/` directory:
 ```
 OpenALPRWrapper/
 ├── src/
-│   └── OpenAlpr.Net/
+│   └── OpenAlprWrapper/
 │       ├── Models.cs              # Data models (Options, Results)
 │       ├── OpenAlprRecognizer.cs  # Main recognizer implementation
 │       ├── NativeOpenAlprApi.cs   # P/Invoke bridge wrapper

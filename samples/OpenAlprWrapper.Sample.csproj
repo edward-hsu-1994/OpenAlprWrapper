@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="../src/OpenAlpr.Net/OpenAlprWrapper.csproj" />
+    <ProjectReference Include="../src/OpenAlprWrapper/OpenAlprWrapper.csproj" />
     <Content Include="images/**/*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

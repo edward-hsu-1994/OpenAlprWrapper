@@ -1,6 +1,6 @@
 CONFIGURATION ?= Release
 SOLUTION := OpenAlprWrapper.sln
-LIBRARY_PROJECT := src/OpenAlpr.Net/OpenAlprWrapper.csproj
+LIBRARY_PROJECT := src/OpenAlprWrapper/OpenAlprWrapper.csproj
 PACKAGE_OUTPUT_DIR ?= artifacts/packages
 NATIVE_BUILD_DIR ?= build/native
 

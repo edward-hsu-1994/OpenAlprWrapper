@@ -15,6 +15,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../../src/OpenAlpr.Net/OpenAlprWrapper.csproj" />
+    <ProjectReference Include="../../src/OpenAlprWrapper/OpenAlprWrapper.csproj" />
   </ItemGroup>
 </Project>

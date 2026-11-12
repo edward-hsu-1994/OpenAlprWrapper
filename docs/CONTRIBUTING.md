@@ -143,7 +143,7 @@ private sealed class FakeNativeApi : IOpenAlprNativeApi
 ### Building from Source
 
 ```bash
-cd /Users/edward_hsu/SourceCodes/OpenALPRWrapper
+# Run these commands from the repository root.
 
 # Build solution
 dotnet build OpenAlprWrapper.sln --configuration Release

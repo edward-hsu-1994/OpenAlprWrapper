@@ -302,7 +302,7 @@ private sealed class FakeNativeApi : IOpenAlprNativeApi
 ### NuGet Package Structure
 
 ```
-OpenAlprWrapper.0.1.0.nupkg/
+OpenAlprWrapper.<version>.nupkg/
 ├── lib/
 │   ├── net10.0/
 │   │   ├── OpenAlprWrapper.dll      (Managed assembly)
@@ -313,7 +313,7 @@ OpenAlprWrapper.0.1.0.nupkg/
 ├── [Content_Types].xml              (Package manifest)
 └── README.md                        (Package readme)
 
-OpenAlprWrapper.0.1.0.snupkg/
+OpenAlprWrapper.<version>.snupkg/
 └── symbols                          (PDB symbol files for source debugging)
 ```
 

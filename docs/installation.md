@@ -90,36 +90,38 @@ Expand-Archive -Path openalpr_runtime_*.zip -DestinationPath C:\OpenALPR\runtime
 
 ## 🚀 Install NuGet Package
 
-### From Local Package
+### From a Local Package
 
-After building the package locally:
+Build the package from the repository root, then add it from the local package
+directory. Replace the example version with the version you built:
 
 ```bash
-cd /Users/edward_hsu/SourceCodes/OpenALPRWrapper/artifacts/packages
-
-# Add package reference from local file
-dotnet add package OpenAlprWrapper --source ./OpenAlprWrapper.0.1.0.nupkg
-
-# Or specify a version directly
-dotnet add package OpenAlprWrapper --version 0.1.0
+make nuget PACKAGE_OUTPUT_DIR=./artifacts/packages
+dotnet add package OpenAlprWrapper --source ./artifacts/packages --version 0.1.0
 ```
 
-### From NuGet.org (After Publishing)
+### Publish to NuGet.org (Optional)
 
-First, publish to NuGet.org:
+The tag-triggered GitHub Actions workflow only builds a downloadable package
+artifact; it does not publish to NuGet.org. To publish a locally built or
+downloaded package, set the version to match the package filename and provide
+your API key through the `NUGET_API_KEY` environment variable:
 
 ```bash
+PACKAGE_VERSION=0.1.0
 dotnet nuget push \
-    artifacts/packages/OpenAlprWrapper.0.1.0.nupkg \
-    -k "YOUR_NUGET_API_KEY" \
-    -s "https://api.nuget.org/v3/index.json" \
+    "./artifacts/packages/OpenAlprWrapper.${PACKAGE_VERSION}.nupkg" \
+    --api-key "$NUGET_API_KEY" \
+    --source "https://api.nuget.org/v3/index.json" \
     --skip-duplicate
 ```
 
-Then add it to your project:
+### Install from NuGet.org
+
+After publishing, add the package to your project:
 
 ```bash
-dotnet add package OpenAlprWrapper --version 0.1.0
+dotnet add package OpenAlprWrapper
 ```
 
 ---
@@ -178,7 +180,7 @@ using var recognizer = new OpenAlprRecognizer(options);
 ### Quick Test
 
 ```bash
-cd /Users/edward_hsu/SourceCodes/OpenALPRWrapper
+# Run these commands from the repository root.
 
 # Run unit tests (with mocks, does not require native library)
 dotnet test --configuration Release --filter "FullyQualifiedName~OpenAlprRecognizerTests"
