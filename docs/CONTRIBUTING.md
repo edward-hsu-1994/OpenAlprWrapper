@@ -224,7 +224,7 @@ supported. The package is uploaded as a workflow artifact and published to
 NuGet.org via Trusted Publishing; no long-lived API key is stored in GitHub.
 Before the first release, configure a NuGet.org Trusted Publishing policy for
 GitHub owner `edward-hsu-1994`, repository `OpenALPRWrapper`, and workflow
-filename `publish.yml`. Also set the repository Actions variable `NUGET_USER`
+filename `publish.yml`. Also set the repository Actions secret `NUGET_USER`
 to the NuGet.org profile name (not email address).
 
 ### Pre-Release Checklist

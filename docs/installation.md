@@ -108,7 +108,7 @@ a short-lived publishing credential through GitHub OIDC; no long-lived NuGet
 API key is stored in GitHub. Before the first release, configure a NuGet.org
 Trusted Publishing policy for GitHub owner `edward-hsu-1994`, repository
 `OpenALPRWrapper`, and workflow filename `publish.yml`. Set the repository
-Actions variable `NUGET_USER` to your NuGet.org profile name, not your email.
+Actions secret `NUGET_USER` to your NuGet.org profile name, not your email.
 For local manual publishing, a NuGet API key is still required; set it in
 `NUGET_API_KEY` before running the command below:
 
