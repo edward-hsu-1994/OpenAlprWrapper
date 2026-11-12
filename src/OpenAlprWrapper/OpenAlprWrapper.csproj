@@ -13,7 +13,8 @@
     
     <!-- Package metadata -->
     <PackageId>OpenAlprWrapper</PackageId>
-    <Version Condition="'$(Version)' == ''">0.1.0</Version>
+    <Version Condition="'$(Version)' == ''">1.0.1</Version>
+
     <Authors>OpenALPRWrapper contributors</Authors>
     <Description>.NET wrapper for OpenALPR license plate recognition. Provides P/Invoke bindings to the native OpenALPR C API.</Description>
     <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
@@ -33,6 +34,7 @@
     <!-- Package includes -->
     <None Include="../../README.md" Pack="true" PackagePath="\" />
     <None Include="../../CHANGELOG.md" Pack="true" PackagePath="\" />
+    <None Include="../../LICENSE" Pack="true" Visible="false" PackagePath="/" />
   </ItemGroup>
 
   <!-- Native assets support for .NET 8+ (optional, set to true to include) -->
