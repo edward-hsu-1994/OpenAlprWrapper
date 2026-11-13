@@ -189,5 +189,5 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
 public sealed class OpenAlprException : Exception
 {
     public OpenAlprException(string message, Exception? innerException = null)
-        : base($"{message}{(innerException != null ? $" (Original error: {innerException.Message})" : "")}") { }
+        : base(message, innerException) { }
 }
