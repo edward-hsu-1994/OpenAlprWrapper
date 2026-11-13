@@ -1,14 +1,33 @@
 namespace OpenAlprWrapper;
 
+/// <summary>Defines the plate recognition operations exposed by <see cref="OpenAlprRecognizer"/>.</summary>
 public interface IPlateRecognizer : IDisposable
 {
+    /// <summary>Recognizes plates in a single image.</summary>
+    /// <param name="image">The encoded image data. Must not be empty.</param>
     PlateRecognitionResult Recognize(ReadOnlyMemory<byte> image);
+
+    /// <summary>Recognizes plates across a batch of images sequentially.</summary>
+    /// <param name="images">The images to recognize. Must not be empty.</param>
     BatchRecognitionResult RecognizeBatch(IEnumerable<ReadOnlyMemory<byte>> images);
+
+    /// <summary>Recognizes a single image asynchronously, honoring the supplied cancellation token.</summary>
+    /// <param name="image">The encoded image data. Must not be empty.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
     Task<PlateRecognitionResult> RecognizeAsync(ReadOnlyMemory<byte> image, CancellationToken cancellationToken = default);
+
+    /// <summary>Recognizes a batch of images asynchronously, honoring the supplied cancellation token.</summary>
+    /// <param name="images">The images to recognize. Must not be empty.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
     Task<BatchRecognitionResult> RecognizeBatchAsync(IEnumerable<ReadOnlyMemory<byte>> images, CancellationToken cancellationToken = default);
 
+    /// <summary>Raised before each image is processed and after completion with progress information.</summary>
     event EventHandler<PlateRecognitionEventArgs>? RecognitionProgress;
+
+    /// <summary>Raised when recognition of an image fails with detailed error information.</summary>
     event EventHandler<PlateErrorEventArgs>? RecognitionError;
+
+    /// <summary>Raised when batch processing completes successfully.</summary>
     event EventHandler<PlateCompletedEventArgs>? Completed;
 }
 
@@ -27,10 +46,17 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
     private readonly IOpenAlprNativeApi nativeApi;
     private bool disposed;
 
+    /// <summary>Raised before each image is processed and after completion with progress information.</summary>
     public event EventHandler<PlateRecognitionEventArgs>? RecognitionProgress;
+
+    /// <summary>Raised when recognition of an image fails with detailed error information.</summary>
     public event EventHandler<PlateErrorEventArgs>? RecognitionError;
+
+    /// <summary>Raised when batch processing completes successfully.</summary>
     public event EventHandler<PlateCompletedEventArgs>? Completed;
 
+    /// <summary>Creates a recognizer with the given options, initializing the native engine.</summary>
+    /// <param name="options">The configuration for recognition and native runtime paths.</param>
     public OpenAlprRecognizer(OpenAlprOptions options) : this(options, CreateNativeApi(options)) { }
 
     private static IOpenAlprNativeApi CreateNativeApi(OpenAlprOptions options) => new NativeOpenAlprApi(options);
@@ -43,6 +69,8 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
         this.nativeApi = nativeApi;
     }
 
+    /// <summary>Recognizes plates in a single image, returning the detected plate(s).</summary>
+    /// <param name="image">The encoded image data. Must not be empty.</param>
     public PlateRecognitionResult Recognize(ReadOnlyMemory<byte> image)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
@@ -61,6 +89,8 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
                 p.Corners.ToArray())).ToArray());
     }
 
+    /// <summary>Recognizes plates in a batch of images sequentially, reporting progress and per-image errors.</summary>
+    /// <param name="images">The images to recognize. Must not be empty.</param>
     public BatchRecognitionResult RecognizeBatch(IEnumerable<ReadOnlyMemory<byte>> images)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
@@ -129,6 +159,9 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
         return new BatchRecognitionResult((int)imageList.Count, successCount, errors.Count, averageTime, results, errors);
     }
 
+    /// <summary>Recognizes a single image asynchronously, honoring the supplied cancellation token.</summary>
+    /// <param name="image">The encoded image data. Must not be empty.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
     public Task<PlateRecognitionResult> RecognizeAsync(ReadOnlyMemory<byte> image, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
@@ -147,6 +180,9 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
         });
     }
 
+    /// <summary>Recognizes a batch of images asynchronously, honoring the supplied cancellation token.</summary>
+    /// <param name="images">The images to recognize. Must not be empty.</param>
+    /// <param name="cancellationToken">A token used to cancel the operation.</param>
     public async Task<BatchRecognitionResult> RecognizeBatchAsync(IEnumerable<ReadOnlyMemory<byte>> images, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
@@ -177,6 +213,7 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
     private void OnCompleted(BatchRecognitionResult result)
         => Completed?.Invoke(this, new PlateCompletedEventArgs(result));
 
+    /// <summary>Releases the native resources owned by this recognizer. Safe to call multiple times.</summary>
     public void Dispose()
     {
         if (disposed)
@@ -186,8 +223,12 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
     }
 }
 
+/// <summary>Thrown when the native OpenALPR API fails during recognition or engine initialization.</summary>
 public sealed class OpenAlprException : Exception
 {
+    /// <summary>Creates a new exception with an optional wrapped cause.</summary>
+    /// <param name="message">A human-readable description of the failure.</param>
+    /// <param name="innerException">The underlying error, if any.</param>
     public OpenAlprException(string message, Exception? innerException = null)
         : base(message, innerException) { }
 }
