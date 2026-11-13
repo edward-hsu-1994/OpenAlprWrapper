@@ -35,6 +35,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Memory leak prevention: Progress event handlers use copy-to-array pattern to avoid invocation issues
 - Batch error tracking: Original exceptions preserved in InnerException field for debugging
 - Type safety: All new record types sealed with explicit parameter documentation
+- `RecognizeAsync` surfaces failures as the original exception (e.g. `OpenAlprException`) instead of an `AggregateException` wrapper, matching the synchronous API
+- Native JSON errors are consistently wrapped in `OpenAlprException` instead of relying on stale exception-message prefix matching
+
+### Removed
+- Unused public delegates `PlateRecognitionEventHandler`, `PlateErrorEventHandler`, `PlateCompletedEventHandler`; events use `EventHandler<T>` directly
 
 ## [0.1.0] - 2026-11-xx
 

@@ -1,21 +1,6 @@
 namespace OpenAlprWrapper;
 
 /// <summary>
-/// Delegate for recognition progress updates in batch processing.
-/// </summary>
-public delegate void PlateRecognitionEventHandler(object sender, PlateRecognitionEventArgs e);
-
-/// <summary>
-/// Delegate for recognition error events during batch processing.
-/// </summary>
-public delegate void PlateErrorEventHandler(object sender, PlateErrorEventArgs e);
-
-/// <summary>
-/// Delegate for recognition completion events in batch processing.
-/// </summary>
-public delegate void PlateCompletedEventHandler(object sender, PlateCompletedEventArgs e);
-
-/// <summary>
 /// Event arguments for recognition progress updates in batch processing.
 /// </summary>
 public sealed record PlateRecognitionEventArgs(

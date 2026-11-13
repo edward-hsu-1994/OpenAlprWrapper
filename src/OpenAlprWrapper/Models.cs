@@ -60,7 +60,6 @@ public sealed record PlateCandidate(string Text, float Confidence);
 /// <summary>A point in image pixel coordinates.</summary>
 public readonly record struct PlatePoint(int X, int Y);
 
-// #region 3. Batch Recognition Results
 /// <summary>
 /// Collection of recognition results from a single batch processing call.
 /// </summary>
@@ -82,4 +81,3 @@ public sealed record BatchError(
     Exception? InnerException, // Original exception if available
     bool IsRecoverable         // Whether the error can be recovered from (e.g., file not found vs. no plate detected)
 );
-// #endregion
