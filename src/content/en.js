@@ -3,6 +3,7 @@ const labels = {
   copied: 'Copied',
   note: 'Note',
   warning: 'Warning',
+  themeToggle: 'Toggle dark / light theme',
   footer: 'OpenALPRWrapper is licensed under AGPL-3.0-only. Documentation covers package version 1.0.2.',
 };
 

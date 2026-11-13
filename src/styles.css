@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --ow-bg: #ffffff;
   --ow-surface: #f7f7f8;
   --ow-border: #e4e4e7;
@@ -12,6 +13,27 @@
   --ow-warn-border: #f5c97b;
   --ow-topbar-h: 56px;
   --ow-sidebar-w: 264px;
+  --ow-inline-fg: #b43a8c;
+  --ow-warn-fg: #b45309;
+  --ow-warn-badge-bg: #fde9c8;
+}
+
+html[data-theme='dark'] {
+  color-scheme: dark;
+  --ow-bg: #0e0e12;
+  --ow-surface: #17171d;
+  --ow-border: #2b2b34;
+  --ow-fg: #e6e6ea;
+  --ow-muted: #9c9ca7;
+  --ow-accent: #6ea0ff;
+  --ow-accent-soft: #182747;
+  --ow-code-bg: #0a0a0d;
+  --ow-code-fg: #e4e4e7;
+  --ow-warn-bg: #251a0d;
+  --ow-warn-border: #7a5518;
+  --ow-inline-fg: #e08cc4;
+  --ow-warn-fg: #e8a352;
+  --ow-warn-badge-bg: #3a2a12;
 }
 
 html, body, #root { height: 100%; }
@@ -42,6 +64,12 @@ body { background: var(--ow-bg); color: var(--ow-fg); }
   padding: 3px 7px; border-radius: 999px;
 }
 .topbar-spacer { flex: 1; }
+.theme-btn {
+  display: grid; place-items: center; width: 30px; height: 30px;
+  border: 1px solid var(--ow-border); background: var(--ow-surface); color: var(--ow-fg);
+  border-radius: 8px; cursor: pointer; font-size: 15px; line-height: 1;
+}
+.theme-btn:hover { background: var(--ow-accent-soft); border-color: color-mix(in srgb, var(--ow-accent) 35%, transparent); }
 .topbar-link {
   font-size: 13.5px; font-weight: 550; color: var(--ow-muted); text-decoration: none;
   padding: 6px 10px; border-radius: 7px;
@@ -109,7 +137,7 @@ body { background: var(--ow-bg); color: var(--ow-fg); }
 .inline-code {
   font: 500 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
   background: var(--ow-surface); border: 1px solid var(--ow-border);
-  padding: 1.5px 5px; border-radius: 5px; color: #b43a8c; white-space: nowrap;
+  padding: 1.5px 5px; border-radius: 5px; color: var(--ow-inline-fg); white-space: nowrap;
 }
 .doc-foot { margin-top: 56px; padding-top: 16px; border-top: 1px solid var(--ow-border); font-size: 12.5px; color: var(--ow-muted); }
 
@@ -136,7 +164,7 @@ body { background: var(--ow-bg); color: var(--ow-fg); }
   color: var(--ow-accent); background: var(--ow-accent-soft); border-radius: 5px; padding: 3px 7px; margin-top: 1px;
 }
 .note-warn { border-left-color: #d97706; background: var(--ow-warn-bg); }
-.note-warn .note-badge { color: #b45309; background: #fde9c8; }
+.note-warn .note-badge { color: var(--ow-warn-fg); background: var(--ow-warn-badge-bg); }
 
 /* ---------- code blocks ---------- */
 .codeblock { margin: 16px 0 22px; border-radius: 12px; overflow: hidden; border: 1px solid #26262c; background: var(--ow-code-bg); }

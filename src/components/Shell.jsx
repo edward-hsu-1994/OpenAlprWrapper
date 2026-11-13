@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import { LANGS } from '../i18n.jsx';
+import { currentTheme, toggleTheme } from '../theme.js';
 
 function TopBar({ lang, labels, onMenu }) {
   const navigate = useNavigate();
   const { page } = useParams();
+  const [theme, setThemeState] = useState(currentTheme());
   return (
     <header className="topbar">
       <button type="button" className="topbar-menu" aria-label="Menu" onClick={onMenu}>☰</button>
@@ -14,6 +16,15 @@ function TopBar({ lang, labels, onMenu }) {
         <span className="brand-badge">v1.0.2</span>
       </NavLink>
       <div className="topbar-spacer" />
+      <button
+        type="button"
+        className="theme-btn"
+        aria-label={labels.themeToggle}
+        title={labels.themeToggle}
+        onClick={() => setThemeState(toggleTheme())}
+      >
+        {theme === 'dark' ? '☀' : '☾'}
+      </button>
       <nav className="topbar-lang" aria-label="Language">
         {LANGS.map((l) => (
           <button

@@ -3,6 +3,7 @@ const labels = {
   copied: '已複製',
   note: '說明',
   warning: '注意',
+  themeToggle: '切換深色 / 淺色主題',
   footer: 'OpenALPRWrapper 以 AGPL-3.0-only 授權。本文件對應套件版本 1.0.2。',
 };
 
