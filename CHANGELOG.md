@@ -23,6 +23,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - **Cross-platform docs**: API Reference, Architecture, Installation, and Troubleshooting guides
 
 ### Changed  
+- `OpenAlprException`: `Message` no longer embeds the inner exception text as "(Original error: …)"; the original error is now preserved structurally on `InnerException` (and in `ToString()`). Callers logging only `ex.Message` will see cleaner text
+- Dropped the .NET Framework 4.8 target: it was silently removed from every build by a csproj condition and could not compile anyway (C# 7.3 default language level, .NET 7+ only APIs). Supported targets are .NET 10.0 and .NET 8.0; README/README-ZH claims updated accordingly
 - `OpenAlprRecognizer.cs`: Added batch processing logic with progress event firing on each image (Current/Total/Result/Progress%)
 - `OpenAlprRecognizer.cs`: Wrapped blocking native API calls in `Task.Run()` with cancellation token support
 - `OpenAlprRecognizer.cs`: Added error handling with detailed BatchError tracking including IsRecoverable flag
