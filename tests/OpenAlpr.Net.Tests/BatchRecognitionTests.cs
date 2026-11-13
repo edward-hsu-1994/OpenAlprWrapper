@@ -99,6 +99,52 @@ public sealed class BatchRecognitionTests
     }
 
     [Fact]
+    public void RecognizeBatch_EmptyImage_RecordedAsRecoverableError()
+    {
+        // Arrange
+        var native = new FakeNativeApi { Result = new NativeRecognitionResult(640, 480, 10f, []) };
+        using var recognizer = new OpenAlprRecognizer(new OpenAlprOptions(), native);
+
+        // Act: the middle image is empty -> per-image ArgumentException -> recoverable input error
+        var result = recognizer.RecognizeBatch([
+            new ReadOnlyMemory<byte>(new byte[] { 1 }),
+            ReadOnlyMemory<byte>.Empty,
+            new ReadOnlyMemory<byte>(new byte[] { 3 })
+        ]);
+
+        // Assert
+        Assert.Equal(3, result.TotalImages);
+        Assert.Equal(2, result.SuccessCount);
+        Assert.Equal(1, result.FailureCount);
+        var error = Assert.Single(result.Errors);
+        Assert.Equal(1, error.ImageIndex);
+        Assert.True(error.IsRecoverable);
+        Assert.IsType<ArgumentException>(error.InnerException);
+    }
+
+    [Fact]
+    public void RecognizeBatch_LazyEnumerable_IsEnumeratedExactlyOnce()
+    {
+        // Arrange
+        var native = new FakeNativeApi { Result = new NativeRecognitionResult(640, 480, 10f, []) };
+        using var recognizer = new OpenAlprRecognizer(new OpenAlprOptions(), native);
+        var enumerationCount = 0;
+        IEnumerable<ReadOnlyMemory<byte>> Lazy()
+        {
+            enumerationCount++;
+            yield return new ReadOnlyMemory<byte>(new byte[] { 1 });
+            yield return new ReadOnlyMemory<byte>(new byte[] { 2 });
+        }
+
+        // Act
+        var result = recognizer.RecognizeBatch(Lazy());
+
+        // Assert: Any() + ToList() used to force two full passes over lazy sources.
+        Assert.Equal(2, result.SuccessCount);
+        Assert.Equal(1, enumerationCount);
+    }
+
+    [Fact]
     public async Task RecognizeBatchAsync_SuccessfulImages_ReturnsCorrectCounts()
     {
         // Arrange

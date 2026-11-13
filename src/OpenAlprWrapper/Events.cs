@@ -17,7 +17,7 @@ public sealed record PlateErrorEventArgs(
     int ImageIndex,           // Index of the image that failed (0-based)
     string ErrorMessage,      // Human-readable error message
     Exception? InnerException, // Original exception if available
-    bool IsRecoverable        // Whether the error can be recovered from
+    bool IsRecoverable        // Whether the caller can fix this image's input and retry it
 );
 
 /// <summary>
