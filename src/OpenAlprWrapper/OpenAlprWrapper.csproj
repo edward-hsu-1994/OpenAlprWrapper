@@ -1,20 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <!-- Multi-target framework support for broader compatibility -->
+    <!-- Targets .NET 10 and .NET 8; .NET Framework is not supported (uses .NET 7+ APIs and modern C#) -->
     <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
-    <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net48</TargetFrameworks>
-    
+
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    
-    <!-- Package metadata -->
-    <PackageId>OpenAlprWrapper</PackageId>
-    <Version Condition="'$(Version)' == ''">1.0.1</Version>
 
+    <!-- Package metadata. Version is sourced from Version.props (semantic versioning). -->
+    <PackageId>OpenAlprWrapper</PackageId>
     <Authors>OpenALPRWrapper contributors</Authors>
     <Description>.NET wrapper for OpenALPR license plate recognition. Provides P/Invoke bindings to the native OpenALPR C API.</Description>
     <PackageLicenseExpression>AGPL-3.0-only</PackageLicenseExpression>
@@ -24,23 +21,17 @@
     <RepositoryType>git</RepositoryType>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-    <IncludeNativeAssetsJson>true</IncludeNativeAssetsJson>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Internals visible to test assembly -->
     <InternalsVisibleTo Include="OpenAlprWrapper.Tests" />
-    
+
     <!-- Package includes -->
     <None Include="../../README.md" Pack="true" PackagePath="\" />
     <None Include="../../CHANGELOG.md" Pack="true" PackagePath="\" />
     <None Include="../../LICENSE" Pack="true" Visible="false" PackagePath="/" />
   </ItemGroup>
-
-  <!-- Native assets support for .NET 8+ (optional, set to true to include) -->
-  <PropertyGroup Condition="'$(IncludeNativeAssetsJson)' == 'true'">
-    <TargetFrameworks>net10.0;net8.0</TargetFrameworks>
-  </PropertyGroup>
 
   <!-- Version props file reference for semantic versioning -->
   <Import Project="Version.props" Condition="Exists('Version.props')" />
