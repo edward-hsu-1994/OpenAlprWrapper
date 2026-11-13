@@ -11,9 +11,14 @@ env:
   BUILD_CONFIGURATION: Release
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    
+  build-test:
+    name: ${{ matrix.os }} - .NET Core
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
     steps:
     - uses: actions/checkout@v4
 
@@ -30,6 +35,21 @@ jobs:
 
     - name: Test
       run: dotnet test --configuration ${{ env.BUILD_CONFIGURATION }} --verbosity minimal
+
+  sample:
+    name: Sample application smoke test
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      run: dotnet restore
 
     - name: Run sample application
       run: dotnet run --project samples/OpenAlprWrapper.Sample.csproj --verbosity minimal || echo "Sample may fail without native runtime, which is expected"
