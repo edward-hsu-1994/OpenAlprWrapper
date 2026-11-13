@@ -3,14 +3,13 @@ using System.Text.Json;
 
 namespace OpenAlprWrapper;
 
-/// <summary>Loads and invokes the platform-specific OpenALPR C ABI bridge.</summary>
+/// <summary>Loads and invokes the platform-specific OpenALPR C ABI bridge. The native engine handle is owned by a <see cref="SafeHandle"/>, so a missed <see cref="Dispose"/> still releases it at finalization.</summary>
 internal sealed class NativeOpenAlprApi : IOpenAlprNativeApi
 {
     private const string LibraryName = "openalpr_dotnet";
-    private readonly IntPtr handle;
+    private readonly OpenAlprEngineHandle handle;
     private readonly string country;
     private readonly int topN;
-    private bool disposed;
 
     /// <summary>Initializes the native OpenALPR API with configuration options.</summary>
     /// <param name="options">OpenALPR options including country, config path, runtime directory, and recognition settings.</param>
@@ -24,13 +23,13 @@ internal sealed class NativeOpenAlprApi : IOpenAlprNativeApi
         handle = Native.Create(this.country, options.ConfigurationFile ?? string.Empty,
             options.RuntimeDirectory ?? string.Empty, this.topN = options.TopN, options.DetectRegion ? 1 : 0);
         
-        if (handle == IntPtr.Zero)
+        if (handle is null || handle.IsInvalid)
             throw new OpenAlprException($"Failed to initialize OpenALPR engine for country '{options.Country}' with TopN={options.TopN}. Ensure native runtime data files are installed.", null);
     }
 
     public unsafe NativeRecognitionResult Recognize(ReadOnlyMemory<byte> image)
     {
-        ObjectDisposedException.ThrowIf(disposed, this);
+        ObjectDisposedException.ThrowIf(handle.IsClosed, this);
         
         if (image.IsEmpty)
             throw new ArgumentException("Image data must not be empty.", nameof(image));
@@ -86,20 +85,34 @@ internal sealed class NativeOpenAlprApi : IOpenAlprNativeApi
         }
     }
 
-    public void Dispose()
+    public void Dispose() => handle.Dispose();
+
+    /// <summary>
+    /// Owns the native engine pointer. Guarantees release via GC finalization even when
+    /// <see cref="Dispose"/> is missed, and P/Invoke marshalling holds the handle for the
+    /// duration of any in-flight native call, so <c>alpr_destroy</c> waits instead of
+    /// freeing the engine mid-call.
+    /// </summary>
+    private sealed class OpenAlprEngineHandle : SafeHandle
     {
-        if (disposed) return;
-        Native.Destroy(handle);
-        disposed = true;
+        public OpenAlprEngineHandle() : base(IntPtr.Zero, ownsHandle: true) { }
+
+        public override bool IsInvalid => handle == IntPtr.Zero;
+
+        protected override bool ReleaseHandle()
+        {
+            Native.Destroy(handle);
+            return true;
+        }
     }
 
     private static class Native
     {
         [DllImport(LibraryName, EntryPoint = "alpr_create", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
-        internal static extern IntPtr Create(string country, string config, string runtime, int topN, int detectRegion);
+        internal static extern OpenAlprEngineHandle Create(string country, string config, string runtime, int topN, int detectRegion);
         
         [DllImport(LibraryName, EntryPoint = "alpr_recognize_json", CallingConvention = CallingConvention.Cdecl)]
-        internal static extern IntPtr Recognize(IntPtr engine, IntPtr image, nuint length);
+        internal static extern IntPtr Recognize(OpenAlprEngineHandle engine, IntPtr image, nuint length);
         
         [DllImport(LibraryName, EntryPoint = "alpr_free_string", CallingConvention = CallingConvention.Cdecl)]
         internal static extern void FreeString(IntPtr value);
