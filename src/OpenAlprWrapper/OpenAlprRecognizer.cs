@@ -101,12 +101,15 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
     {
         ObjectDisposedException.ThrowIf(disposed, this);
 
-        if (images == null || !images.Any())
+        if (images == null)
             throw new ArgumentException("Image collection must not be empty.", nameof(images));
 
         cancellationToken.ThrowIfCancellationRequested();
 
-        var imageList = images.ToList();
+        var imageList = images as IList<ReadOnlyMemory<byte>> ?? images.ToList();
+
+        if (imageList.Count == 0)
+            throw new ArgumentException("Image collection must not be empty.", nameof(images));
 
         OnRecognitionProgress(0, imageList.Count, null, 0f);
 
@@ -146,9 +149,10 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
             }
             catch (Exception ex) when (ex is not OpenAlprException)
             {
-                var error = new BatchError(i, $"Recognition failed: {ex.Message}", ex, false);
+                var isRecoverable = ex is ArgumentException;
+                var error = new BatchError(i, $"Recognition failed: {ex.Message}", ex, isRecoverable);
                 errors.Add(error);
-                OnRecognitionError(i, $"Recognition failed: {ex.Message}", ex, false);
+                OnRecognitionError(i, $"Recognition failed: {ex.Message}", ex, isRecoverable);
             }
         }
 
@@ -182,13 +186,14 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
     {
         ObjectDisposedException.ThrowIf(disposed, this);
 
-        if (images == null || !images.Any())
+        var imageList = images as IList<ReadOnlyMemory<byte>> ?? images?.ToList();
+        if (imageList is null || imageList.Count == 0)
             throw new ArgumentException("Image collection must not be empty.", nameof(images));
 
         BatchRecognitionResult result;
         try
         {
-            result = await Task.Run(() => RecognizeBatch(images, cancellationToken), cancellationToken).ConfigureAwait(false);
+            result = await Task.Run(() => RecognizeBatch(imageList, cancellationToken), cancellationToken).ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
