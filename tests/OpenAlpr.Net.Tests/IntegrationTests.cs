@@ -71,15 +71,14 @@ public sealed class IntegrationTests
     }
 
     [Fact(Skip = "Requires OpenALPR native library.")]
-    public void Integration_AsynchronousRecognition_CompletesSuccessfully()
+    public async Task Integration_AsynchronousRecognition_CompletesSuccessfully()
     {
         var imagePath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "samples", "images", "wikipedia-155-JVM.jpg");
         if (!File.Exists(imagePath)) return;
         
         var imageBytes = File.ReadAllBytes(imagePath);
         using var recognizer = new OpenAlprRecognizer(new OpenAlprOptions { Country = "us" });
-        var result = Task.Run(async () => 
-            await recognizer.RecognizeAsync(imageBytes, CancellationToken.None)).GetAwaiter().GetResult();
+        var result = await recognizer.RecognizeAsync(imageBytes, CancellationToken.None);
         Assert.NotNull(result);
     }
 
