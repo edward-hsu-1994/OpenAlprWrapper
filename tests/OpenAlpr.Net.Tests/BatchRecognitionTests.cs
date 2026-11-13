@@ -98,6 +98,56 @@ public sealed class BatchRecognitionTests
         Assert.Throws<ObjectDisposedException>(() => recognizer.RecognizeBatch([new ReadOnlyMemory<byte>(new byte[] { 1 })]));
     }
 
+    [Fact]
+    public async Task RecognizeBatchAsync_SuccessfulImages_ReturnsCorrectCounts()
+    {
+        // Arrange
+        var native = new FakeNativeApi { Result = new NativeRecognitionResult(640, 480, 10f, []) };
+        using var recognizer = new OpenAlprRecognizer(new OpenAlprOptions(), native);
+
+        // Act
+        var result = await recognizer.RecognizeBatchAsync([
+            new ReadOnlyMemory<byte>(new byte[] { 1 }),
+            new ReadOnlyMemory<byte>(new byte[] { 2 }),
+            new ReadOnlyMemory<byte>(new byte[] { 3 })
+        ]);
+
+        // Assert
+        Assert.Equal(3, result.TotalImages);
+        Assert.Equal(3, result.SuccessCount);
+        Assert.Equal(0, result.FailureCount);
+        Assert.Empty(result.Errors);
+    }
+
+    [Fact]
+    public async Task RecognizeBatchAsync_CancelledToken_ThrowsOperationCanceled_AndInvokesNoNative()
+    {
+        // Arrange: cancel before invoking so the per-iteration check short-circuits.
+        var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        using var api = new CountingNativeApi();
+        using var recognizer = new OpenAlprRecognizer(new OpenAlprOptions(), api);
+
+        // Act & Assert: cancellation propagates and no native call happens.
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => recognizer.RecognizeBatchAsync(
+                Enumerable.Range(1, 5).Select(_ => new ReadOnlyMemory<byte>(new byte[] { 1 })),
+                cts.Token));
+
+        Assert.Equal(0, api.RecognizeCount);
+    }
+
+    private sealed class CountingNativeApi : IOpenAlprNativeApi
+    {
+        private int _recognizeCount;
+        public int RecognizeCount => Volatile.Read(ref _recognizeCount);
+
+        public NativeRecognitionResult Recognize(ReadOnlyMemory<byte> image) => Interlocked.Increment(ref _recognizeCount) > 0 ? new NativeRecognitionResult(0, 0, 0f, []) : new NativeRecognitionResult(0, 0, 0f, []);
+
+        public void Dispose() { }
+    }
+
     private sealed class FakeNativeApi : IOpenAlprNativeApi
     {
         public NativeRecognitionResult Result { get; set; } = new(0, 0, 0, []);

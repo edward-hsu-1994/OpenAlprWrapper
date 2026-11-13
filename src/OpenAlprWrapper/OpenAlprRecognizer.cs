@@ -64,14 +64,22 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
     public BatchRecognitionResult RecognizeBatch(IEnumerable<ReadOnlyMemory<byte>> images)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
+        return RecognizeBatch(images, CancellationToken.None);
+    }
+
+    internal BatchRecognitionResult RecognizeBatch(IEnumerable<ReadOnlyMemory<byte>> images, CancellationToken cancellationToken)
+    {
+        ObjectDisposedException.ThrowIf(disposed, this);
 
         if (images == null || !images.Any())
             throw new ArgumentException("Image collection must not be empty.", nameof(images));
 
+        cancellationToken.ThrowIfCancellationRequested();
+
         var imageList = images.ToList();
-        
+
         OnRecognitionProgress(0, imageList.Count, null, 0f);
-        
+
         var results = new List<PlateRecognitionResult>();
         var errors = new List<BatchError>();
         float totalProcessingTimeMs = 0;
@@ -79,6 +87,7 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
 
         for (var i = 0; i < imageList.Count; i++)
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ObjectDisposedException.ThrowIf(disposed, this);
 
             try
@@ -87,7 +96,7 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
                     throw new ArgumentException("Encoded image data must not be empty.", "image");
 
                 var result = nativeApi.Recognize(imageList[i]);
-                
+
                 OnRecognitionProgress(i + 1, imageList.Count, 
                     new PlateRecognitionResult(result.ImageWidth, result.ImageHeight, result.ProcessingTimeMs, []),
                     (float)(i + 1) / imageList.Count);
@@ -114,7 +123,7 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
         }
 
         var averageTime = successCount > 0 ? totalProcessingTimeMs / successCount : 0f;
-        
+
         OnCompleted(new BatchRecognitionResult((int)imageList.Count, successCount, errors.Count, averageTime, results, errors));
 
         return new BatchRecognitionResult((int)imageList.Count, successCount, errors.Count, averageTime, results, errors);
@@ -138,19 +147,25 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
         });
     }
 
-    public Task<BatchRecognitionResult> RecognizeBatchAsync(IEnumerable<ReadOnlyMemory<byte>> images, CancellationToken cancellationToken = default)
+    public async Task<BatchRecognitionResult> RecognizeBatchAsync(IEnumerable<ReadOnlyMemory<byte>> images, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
 
         if (images == null || !images.Any())
             throw new ArgumentException("Image collection must not be empty.", nameof(images));
 
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        return Task.Run(() => RecognizeBatch(images), cts.Token).ContinueWith(t => {
-            if (cts.IsCancellationRequested)
-                throw new OperationCanceledException("Batch recognition was canceled.", cancellationToken);
-            return t.Result;
-        });
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        BatchRecognitionResult result;
+        try
+        {
+            result = await Task.Run(() => RecognizeBatch(images, linked.Token), linked.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (linked.IsCancellationRequested && cancellationToken.IsCancellationRequested)
+        {
+            throw new OperationCanceledException(cancellationToken);
+        }
+
+        return result;
     }
 
     private void OnRecognitionProgress(int current, int total, PlateRecognitionResult? result, float progress)
