@@ -15,7 +15,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
   - `RecognitionProgress`: Fired before each image and after completion (Current/Total/Progress%)
   - `RecognitionError`: Fired when recognition fails with detailed error information  
   - `Completed`: Fired when batch processing completes successfully
-- **Multi-target framework support**: Cross-platform compilation targeting .NET 10.0, .NET 8.0, and .NET Framework 4.8 (Windows only)
+- **Multi-target framework support**: Cross-platform compilation targeting .NET 10.0 and .NET 8.0
 - **Event argument models**: `PlateRecognitionEventArgs`, `PlateErrorEventArgs`, `PlateCompletedEventArgs` with full documentation
 - **Integration tests**: Real-world image validation tests (skipped when native library unavailable)
 - **NuGet package documentation**: Comprehensive installation and usage guide in package

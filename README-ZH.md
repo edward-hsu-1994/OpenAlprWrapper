@@ -15,7 +15,7 @@ OpenAlprWrapper 是 OpenALPR 車牌辨識函式庫的 .NET 包裝程式，透過
 
 - 封裝 OpenALPR 原生 C API。
 - 可設定 country、設定檔與 runtime data 路徑。
-- 支援 .NET 8、.NET 10，以及 Windows 上的 .NET Framework 4.8。
+- 支援 .NET 8 與 .NET 10（跨平台）。
 - 提供批次、非同步辨識及進度／錯誤事件。
 - 透過 `IDisposable` 管理原生資源。
 

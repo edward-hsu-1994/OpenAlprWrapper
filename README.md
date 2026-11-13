@@ -15,7 +15,7 @@ AGPL-3.0 .NET wrapper for the [OpenALPR](https://www.openalpr.com/) license plat
 
 - P/Invoke wrapper for OpenALPR native C API
 - Full control over configuration and runtime data paths
-- Cross-platform compatible (.NET 10.0 / .NET 8.0 / .NET Framework 4.8 on Windows)
+- Cross-platform compatible (.NET 10.0 / .NET 8.0)
 - Comprehensive error handling with detailed exception messages
 - Resource-safe memory management via `IDisposable` pattern
 
