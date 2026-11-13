@@ -37,11 +37,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Type safety: All new record types sealed with explicit parameter documentation
 - `RecognizeAsync` surfaces failures as the original exception (e.g. `OpenAlprException`) instead of an `AggregateException` wrapper, matching the synchronous API
 - Native JSON errors are consistently wrapped in `OpenAlprException` instead of relying on stale exception-message prefix matching
+- Native engine handle is held in a `SafeHandle`: a missed `Dispose` no longer leaks it (released at finalization), and `alpr_destroy` waits for in-flight native calls instead of freeing the engine mid-call
+- Batch recognition enumerates the input sequence exactly once; `BatchError.IsRecoverable` now distinguishes per-image input errors (`ArgumentException`, recoverable) from unexpected failures
 
 ### Removed
 - Unused public delegates `PlateRecognitionEventHandler`, `PlateErrorEventHandler`, `PlateCompletedEventHandler`; events use `EventHandler<T>` directly
 
-## [0.1.0] - 2026-11-xx
+## [1.0.1] - 2026-11-12
 
 ### Added
 - Initial release of .NET wrapper for OpenALPR native C API
@@ -55,14 +57,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Platform support limited to verified combinations (Linux ARM64 tested)
 - Managed P/Invoke path not yet smoke-tested on all architectures
 
-## [v0.2.0] - Planned
-
-### Planned Features
-- Pre-built native asset bundling for Linux/Windows/macOS
-- NuGet `nativeAssets.json` support for auto-download of platform binaries
-- Docker Compose file for development with pre-installed OpenALPR
-- Batch recognition API (`BatchRecognize(IEnumerable<byte>)`)
-- Progress callback for long-running recognition jobs
+> Note: 1.0.0 was published first but is unlisted on NuGet.org; 1.0.1 is the current listed release.
 
 ---
 
