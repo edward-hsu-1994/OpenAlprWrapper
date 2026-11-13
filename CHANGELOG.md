@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-11-13
+
 ### Added
 - **Batch Recognition API**: `RecognizeBatch(IEnumerable<ReadOnlyMemory<byte>>)` method for processing multiple images in a single call with aggregated results and error tracking
 - **Async API**: Non-blocking recognition methods with `CancellationToken` support:
