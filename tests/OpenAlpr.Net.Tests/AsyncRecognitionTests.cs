@@ -90,6 +90,20 @@ public sealed class AsyncRecognitionTests
     }
 
     [Fact]
+    public async Task RecognizeAsync_NativeFailure_ThrowsOpenAlprException()
+    {
+        // Arrange
+        var native = new FakeNativeApi { Failure = new OpenAlprException("native engine failed") };
+        using var recognizer = new OpenAlprRecognizer(new OpenAlprOptions(), native);
+
+        // Act & Assert: the async path must surface the original exception type,
+        // not an AggregateException wrapper (regression: ContinueWith + t.Result).
+        var ex = await Assert.ThrowsAsync<OpenAlprException>(
+            () => recognizer.RecognizeAsync(new ReadOnlyMemory<byte>(new byte[] { 1 })));
+        Assert.Equal("native engine failed", ex.Message);
+    }
+
+    [Fact]
     public async Task RecognizeAsync_AfterDispose_ThrowsObjectDisposedException()
     {
         // Arrange
@@ -118,9 +132,11 @@ public sealed class AsyncRecognitionTests
     private sealed class FakeNativeApi : IOpenAlprNativeApi
     {
         public NativeRecognitionResult Result { get; set; } = new(0, 0, 0, []);
+        public Exception? Failure { get; set; }
         public int DisposeCount { get; private set; }
 
-        public NativeRecognitionResult Recognize(ReadOnlyMemory<byte> image) => Result;
+        public NativeRecognitionResult Recognize(ReadOnlyMemory<byte> image)
+            => Failure is null ? Result : throw Failure;
         public void Dispose() => DisposeCount++;
     }
 }

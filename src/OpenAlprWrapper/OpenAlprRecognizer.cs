@@ -154,30 +154,25 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
 
         var averageTime = successCount > 0 ? totalProcessingTimeMs / successCount : 0f;
 
-        OnCompleted(new BatchRecognitionResult((int)imageList.Count, successCount, errors.Count, averageTime, results, errors));
+        OnCompleted(new BatchRecognitionResult(imageList.Count, successCount, errors.Count, averageTime, results, errors));
 
-        return new BatchRecognitionResult((int)imageList.Count, successCount, errors.Count, averageTime, results, errors);
+        return new BatchRecognitionResult(imageList.Count, successCount, errors.Count, averageTime, results, errors);
     }
 
     /// <summary>Recognizes a single image asynchronously, honoring the supplied cancellation token.</summary>
     /// <param name="image">The encoded image data. Must not be empty.</param>
     /// <param name="cancellationToken">A token used to cancel the operation.</param>
-    public Task<PlateRecognitionResult> RecognizeAsync(ReadOnlyMemory<byte> image, CancellationToken cancellationToken = default)
+    public async Task<PlateRecognitionResult> RecognizeAsync(ReadOnlyMemory<byte> image, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
-        
+
         if (cancellationToken.IsCancellationRequested)
             throw new OperationCanceledException(cancellationToken);
 
         if (image.IsEmpty)
             throw new ArgumentException("Encoded image data must not be empty.", nameof(image));
 
-        using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-        return Task.Run(() => Recognize(image), cts.Token).ContinueWith(t => {
-            if (cts.IsCancellationRequested)
-                throw new OperationCanceledException("Recognition was canceled.", cancellationToken);
-            return t.Result;
-        });
+        return await Task.Run(() => Recognize(image), cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>Recognizes a batch of images asynchronously, honoring the supplied cancellation token.</summary>
@@ -190,13 +185,12 @@ public sealed class OpenAlprRecognizer : IPlateRecognizer
         if (images == null || !images.Any())
             throw new ArgumentException("Image collection must not be empty.", nameof(images));
 
-        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         BatchRecognitionResult result;
         try
         {
-            result = await Task.Run(() => RecognizeBatch(images, linked.Token), linked.Token).ConfigureAwait(false);
+            result = await Task.Run(() => RecognizeBatch(images, cancellationToken), cancellationToken).ConfigureAwait(false);
         }
-        catch (OperationCanceledException) when (linked.IsCancellationRequested && cancellationToken.IsCancellationRequested)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
             throw new OperationCanceledException(cancellationToken);
         }
