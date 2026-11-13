@@ -72,13 +72,13 @@ internal sealed class NativeOpenAlprApi : IOpenAlprNativeApi
                 root.GetProperty("processing_time_ms").GetSingle(), 
                 plates);
         }
-        catch (JsonException ex) when (ex.Message.StartsWith("Unexpected end"))
+        catch (JsonException ex)
         {
-            throw new OpenAlprException($"OpenALPR returned truncated JSON during recognition for country='{country}'.", ex);
+            throw new OpenAlprException($"OpenALPR returned malformed or truncated JSON during recognition for country='{country}'.", ex);
         }
-        catch (JsonException ex) when (ex.Message.StartsWith("The JSON object"))
+        catch (Exception ex) when (ex is KeyNotFoundException or InvalidOperationException)
         {
-            throw new OpenAlprException($"OpenALPR returned malformed JSON: '{ex.Message}' for country='{country}'.", ex);
+            throw new OpenAlprException($"OpenALPR returned JSON with missing or invalid fields during recognition for country='{country}'.", ex);
         }
         finally
         {
